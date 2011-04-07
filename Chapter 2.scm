@@ -150,7 +150,7 @@
 
 ;-- 2.22
 ; The first version won't work because the items are popped from the
-; first list and then pushed in the second � resulting in a reverse
+; first list and then pushed in the second � resulting in a reverse
 ; order.
 ; The second version won't work because "cons"-ing a list to an int
 ; results in a list-in-a-list ((a b) c); contrary to "cons"-ing an
@@ -655,9 +655,533 @@
 <=> 'quote
 ; i.e. the symbol 'quote
 
-;-- 2.45
+;-- 2.56
+; Functions given:
+(define (variable? x) (symbol? x))
+(define (same-variable? v1 v2)
+  (and (variable? v1) (variable? v2) (eq? v1 v2)))
+(define (make-sum a1 a2) (list '+ a1 a2))     ; Naive implementation; is replaced afterwards
+(define (make-product m1 m2) (list '* m1 m2)) ; Same
+(define (sum? x)
+  (and (pair? x) (eq? (car x) '+)))
+(define (addend s) (cadr s))
+(define (augend s) (caddr s))
+(define (product? x)
+  (and (pair? x) (eq? (car x) '*)))
+(define (multiplier p) (cadr p))
+(define (multiplicand p) (caddr p))
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list '+ a1 a2))))
+(define (=number? exp num)
+  (and (number? exp) (= exp num)))
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list '* m1 m2))))
 
+; The question itself:
+(define (exponentiation? x)
+  (and (pair? x) (eq? (car x) '** )))
+(define base cadr) ; No need to copy the argument
+(define exponent caddr)
+(define (make-exponentiation base exponent)
+  (cond ((=number? base 1) 1)
+        ((=number? exponent 0) 1)
+        ((=number? exponent 1) base)
+        ((and (number? base) (number? exponent)) (expt base exponent))
+        (else (list '** base exponent))))
+(define (deriv exp var)
+  (cond ((number? exp) 0)
+        ((variable? exp)
+         (if (same-variable? exp var) 1 0))
+        ((sum? exp)
+         (make-sum (deriv (addend exp) var)
+                   (deriv (augend exp) var)))
+        ((product? exp)
+         (make-sum
+           (make-product (multiplier exp)
+                         (deriv (multiplicand exp) var))
+           (make-product (deriv (multiplier exp) var)
+                         (multiplicand exp))))
+        ((exponentiation? exp)
+         (make-product (make-product (exponent exp)
+                                     (make-exponentiation (base exp)
+                                                          (if (number? (exponent exp))
+                                                            (- (exponent exp) 1)
+                                                            (list '- (exponent exp) '1))))
+                       (deriv (base exp) var)))
+        (else
+         (error "unknown expression type -- DERIV" exp))))
 
-http://sisc-scheme.org/sisc-online.php 
-http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html
-http://community.schemewiki.org/?sicp-ex-2.40
+; Test cases:
+(deriv '(** 5 6) '2)
+; 0
+(deriv '(** x 1) 'x)
+; 1
+(deriv '(** 1 x) 'x)
+; 0
+(deriv '(** x 5) 'x)
+; (* 5 (** x 4))
+(deriv '(** x y) 'x)
+; (* y (** x (- y 1)))
+
+;-- 2.57
+(define (addend s) (cadr s)) ; Does not change
+(define (augend s)
+  (if (null? (cdddr s))         ; Means the addition is just two terms long
+    (caddr s)                   ; The term itself
+    (append '(+) (cddr s))))    ; A new addition comprised of the next terms
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        ((sum? a2) (make-sum a1 (make-sum (addend a2) (augend a2))))
+        (else (list '+ a1 a2))))
+(define (multiplier p) (cadr p))
+(define (multiplicand p)
+  (if (null? (cdddr p))
+    (caddr p)
+    (append '(*) (cddr p))))
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((product? m2) (make-product m1 (make-product (multiplier m2) (multiplicand m2))))
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list '* m1 m2))))
+
+; Test:
+(deriv '(* x y (+ x 3)) 'x)
+;  (+ (* x y) (* y (+ x 3)))
+
+;-- 2.58
+; a.
+(define (sum? x)
+  (and (pair? x) (pair? (cdr x)) (eq? (cadr x) '+)))
+(define addend car)
+(define augend caddr)
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list a1 '+ a2))))
+(define (product? x)
+  (and (pair? x) (pair? (cdr x)) (eq? (cadr x) '*)))
+(define multiplier car)
+(define multiplicand caddr)
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list m1 '* m2))))
+
+; Test:
+(deriv '(x + (3 * (x + (y + 2)))) 'x)
+; 4
+
+; b.
+; It looks long and complicated - kept in stock for a long winter night.
+
+;-- 2.59
+; Functions given:
+(define (element-of-set? x set)
+  (cond ((null? set) #f) ;"false" and "true" replaced by their Scheme equivalent for convenience
+        ((equal? x (car set)) #t)
+        (else (element-of-set? x (cdr set)))))
+(define (adjoin-set x set)
+  (if (element-of-set? x set)
+      set
+      (cons x set)))
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) '())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1)
+               (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+; Union:
+(define (union-set set1 set2)
+  (cond ((null? set1) set2) ; We'll add elements of set1 to set2 (given they're not already present in set2)
+        ((element-of-set? (car set1) set2)
+          (union-set (cdr set1) set2))
+        (else (cons (car set1)
+                    (union-set (cdr set1) set2)))))
+
+; Test:
+(define s1 (list 1 2 3 4 5))
+(define s2 (list 5 6 7 8))
+(intersection-set s1 s2)
+; (5)
+(union-set s1 s2)
+; (1 2 3 4 5 6 7 8)
+
+;-- 2.60
+; element-of-set?: doesn't need to change
+(define adjoin-set cons) ; No need to check for duplicates
+; intersection-set: doesn't change either. It will destroy the duplicates.
+(define (union-set set1 set2)
+  (append set1 set2))
+
+; Test:
+(union-set s1 s3)
+; (1 2 3 4 5 5 5 5 5)
+(intersection-set s1 s3)
+; (5)
+
+; Efficiency: by eliminating the need to walk the list, adjoin is now O(1) instead of O(n).
+; union becomes O(n) instead of O(n²)
+
+;-- 2.61
+; Functions given:
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((= x (car set)) true)
+        ((< x (car set)) false)
+        (else (element-of-set? x (cdr set)))))
+(define (intersection-set set1 set2)
+  (if (or (null? set1) (null? set2))
+      '()
+      (let ((x1 (car set1)) (x2 (car set2)))
+        (cond ((= x1 x2)
+               (cons x1
+                     (intersection-set (cdr set1)
+                                       (cdr set2))))
+              ((< x1 x2)
+               (intersection-set (cdr set1) set2))
+              ((< x2 x1)
+               (intersection-set set1 (cdr set2)))))))
+
+; Answer:
+(define (adjoin-set x set)
+  (cond ((or (null? set) (< x (car set))) (cons x set))
+        ((= x (car set)) set)
+        (else (cons (car set) (adjoin-set x (cdr set))))))
+
+; Test:
+(define s4 (list 1 2 3 5 6))
+(adjoin-set 4 s4)
+; (1 2 3 4 5 6)
+(adjoin-set 9 s4)
+; (1 2 3 5 6 9)
+
+;-- 2.62
+(define (union-set set1 set2)
+  (if (null? set1)
+      set2
+      (let ((x1 (car set1)) (x2 (car set2)))
+        (cond ((= x1 x2)
+               (cons x1 (union-set (cdr set1) (cdr set2))))
+              ((< x1 x2)
+               (cons x1 (union-set (cdr set1) set2)))
+              ((< x2 x1)
+               (cons x2 (union-set set1 (cdr set2))))))))
+; This implementation is O(n) because each iteration selects an item from either set1 or
+; set2 and cons it (an O(1) operation). There are n iterations at most, n being the length
+; of set1 + the length of set2, hence an O(n) total complexity.
+
+; Test:
+(define s1 (list 1 2 3 4 5))
+(define s2 (list 5 6 7 8))
+(union-set s1 s2)
+; (1 2 3 4 5 6 7 8)
+
+;-- 2.63
+; Tree functions:
+(define (entry tree) (car tree))
+(define (left-branch tree) (cadr tree))
+(define (right-branch tree) (caddr tree))
+(define (make-tree entry left right)
+  (list entry left right))
+(define (element-of-set? x set)
+  (cond ((null? set) #f) ; Changed "true" to #t and false to #f according to Scheme syntax
+        ((= x (entry set)) #t)
+        ((< x (entry set))
+         (element-of-set? x (left-branch set)))
+        ((> x (entry set))
+         (element-of-set? x (right-branch set)))))
+(define (adjoin-set x set)
+  (cond ((null? set) (make-tree x '() '()))
+        ((= x (entry set)) set)
+        ((< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-set x (left-branch set))
+                    (right-branch set)))
+        ((> x (entry set))
+         (make-tree (entry set)
+                    (left-branch set)
+                    (adjoin-set x (right-branch set))))))
+
+; a.
+; Do the two procedures produce the same result for every tree?
+; Yes. To test:
+(define t1 (list 7 (list 3 (list 1 '() '()) (list 5 '() '())) (list 9 '() (list 11 '() '()))))
+(define t2 (list 3 (list 1 '() '()) (list 7 (list 5 '() '()) (list 9 '() (list 11 '() '())))))
+(define t3 (list 5 (list 3 (list 1 '() '()) '()) (list 9 (list 7 '() '()) (list 11 '() '()))))
+; If not, how do the results differ? What lists do the two procedures produce for the trees in figure 2.16?
+; Both tree->list algorithm will print (1 3 5 7 9 11) for the three trees.
+
+; b.
+; They're O(n)
+
+;-- 2.64
+(define (list->tree elements)
+  (car (partial-tree elements (length elements))))
+(define (partial-tree elts n)
+  (if (= n 0)
+      (cons '() elts)
+      (let ((left-size (quotient (- n 1) 2)))
+        (let ((left-result (partial-tree elts left-size)))
+          (let ((left-tree (car left-result))
+                (non-left-elts (cdr left-result))
+                (right-size (- n (+ left-size 1))))
+            (let ((this-entry (car non-left-elts))
+                  (right-result (partial-tree (cdr non-left-elts)
+                                              right-size)))
+              (let ((right-tree (car right-result))
+                    (remaining-elts (cdr right-result)))
+                (cons (make-tree this-entry left-tree right-tree)
+                      remaining-elts))))))))
+
+; a.
+; Partial-tree splits the list given in two parts of equal size (modulo 1). Both halves are submitted to partial-tree through recursion.
+; The recursive procedures will yield a pair made of the subtree and the list of elements that didn't make it into said subtree. By
+; splitting the process between right and left hands, we will ensure that we have a correctly balanced tree. The stop condition for
+; partial-tree is asking a tree made of 0 elements, who will yield a pair made of an empty list and the list of items.
+; Finally, these halves are assembled by a make-tree between the value at the middle of the list (strictly speaking the leftmost of
+; the right half) and the left and right trees computed beforehand.
+; This only works with ordered lists containing no duplicates.
+
+; Tree given for (1 3 5 7 9 11):
+;              5
+;           /     \
+;         1         9
+;          \       /  \
+;            3    7    11
+
+; b.
+; Basically O(n).
+
+;-- 2.65
+; First try:
+; We will reuse filter from a few exercises back
+(define (filter predicate sequence)
+   (cond ((null? sequence) '())
+         ((predicate (car sequence))
+          (cons (car sequence)
+                (filter predicate (cdr sequence))))
+         (else (filter predicate (cdr sequence)))))
+(define (intersection-set tree1 tree2)
+  (list->tree (filter (lambda (x) (element-of-set? x tree1))
+                      (tree->list-1 tree2))))
+(define (union-set tree1 tree2)
+  (define (union-tree-list t l)
+    (if (null? l)
+      t
+      (union-tree-list (adjoin-set (car l) t) (cdr l))))
+  (union-tree-list tree1 (tree->list-1 tree2)))
+; Complexity:
+; intersection uses an O(log n) filter on an O(n) walk of the elements of a list. It's O(n * log n)
+; union uses an O(log n) insertion on an O(n) walk: it's O(n * log n) too.
+; These algorithms are poor, in the sense that they don't reuse previous techniques.
+
+; Second try:
+(define tree->list tree->list-1)
+(define (intersection-set-tree tree1 tree2)
+  (list->tree (intersection-set (tree->list tree1)
+                                (tree->list tree2))))
+(define (union-set-tree tree1 tree2)
+  (list->tree (union-set (tree->list tree1)
+                         (tree->list tree2))))
+; Complexity: all operations are O(n) as shown in 2.62 and performed sequentially; hence the result is O(n) too.
+
+; Test:
+(define t1 (list 7 (list 3 (list 1 '() '()) (list 5 '() '())) (list 9 '() (list 11 '() '()))))
+(define t2 (list 4 (list 1 '() '()) (list 7 (list 6 '() '()) (list 9 '() (list 11 '() '())))))
+; First try:
+(intersection-set t1 t2)
+; (7 (1 () ()) (9 () (11 () ())))
+(union-set t1 t2)
+; (7 (3 (1 () ()) (5 (4 () ()) (6 () ()))) (9 () (11 () ())))
+; Second try:
+(intersection-set-tree t1 t2)
+; (7 (1 () ()) (9 () (11 () ())))
+(union-set-tree t1 t2)
+; (5 (3 (1 () ()) (4 () ())) (7 (6 () ()) (9 () (11 () ()))))
+; The difference between the two union-set stems from the fact that the first version
+; merely adds elements from tree2 to tree1, while the second version flattens both trees,
+; creates a new list and turns that list into a balanced tree.
+
+;-- 2.66
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) #f)
+        ((= given-key (key set-of-records)) true)
+        ((< given-key (key set-of-records))
+         (lookup given-key (left-branch set-of-records)))
+        ((> given-key (key set-of-records))
+         (lookup given-key (right-branch set-of-records)))))
+; Basically just a tree lookup.
+
+;-- 2.67
+; Huffman trees
+; Functions given:
+(define (make-leaf symbol weight)
+  (list 'leaf symbol weight))
+(define (leaf? object)
+  (eq? (car object) 'leaf))
+(define (symbol-leaf x) (cadr x))
+(define (weight-leaf x) (caddr x))
+(define (make-code-tree left right)
+  (list left
+        right
+        (append (symbols left) (symbols right))
+        (+ (weight left) (weight right))))
+(define (left-branch tree) (car tree))
+(define (right-branch tree) (cadr tree))
+(define (symbols tree)
+  (if (leaf? tree)
+      (list (symbol-leaf tree))
+      (caddr tree)))
+(define (weight tree)
+  (if (leaf? tree)
+      (weight-leaf tree)
+      (cadddr tree)))
+(define (decode bits tree)
+  (define (decode-1 bits current-branch)
+    (if (null? bits)
+        '()
+        (let ((next-branch
+               (choose-branch (car bits) current-branch)))
+          (if (leaf? next-branch)
+              (cons (symbol-leaf next-branch)
+                    (decode-1 (cdr bits) tree))
+              (decode-1 (cdr bits) next-branch)))))
+  (decode-1 bits tree))
+(define (choose-branch bit branch)
+  (cond ((= bit 0) (left-branch branch))
+        ((= bit 1) (right-branch branch))
+        (else (error "bad bit -- CHOOSE-BRANCH" bit))))
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+                    (adjoin-set x (cdr set))))))
+(define (make-leaf-set pairs)
+  (if (null? pairs)
+      '()
+      (let ((pair (car pairs)))
+        (adjoin-set (make-leaf (car pair)    ; symbol
+                               (cadr pair))  ; frequency
+                    (make-leaf-set (cdr pairs))))))
+
+; Question:
+(define sample-tree
+  (make-code-tree (make-leaf 'A 4)
+                  (make-code-tree
+                   (make-leaf 'B 2)
+                   (make-code-tree (make-leaf 'D 1)
+                                   (make-leaf 'C 1)))))
+(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+(decode sample-message sample-tree)
+; (a d a b b c a)
+
+;-- 2.68
+; Given:
+(define (encode message tree)
+  (if (null? message)
+      '()
+      (append (encode-symbol (car message) tree)
+              (encode (cdr message) tree))))
+
+; Answer:
+(define (encode-symbol symbol tree)
+  (cond ((and (leaf? tree) (eq? symbol (symbol-leaf tree))) '())
+        ((memq symbol (symbols (left-branch tree)))
+          (cons '0 (encode-symbol symbol (left-branch tree))))
+        ((memq symbol (symbols (right-branch tree)))
+          (cons '1 (encode-symbol symbol (right-branch tree))))))
+
+; Tests:
+(encode-symbol 'a sample-tree)
+; (0)
+(encode-symbol 'b sample-tree)
+; (1 0)
+(encode-symbol 'c sample-tree)
+; (1 1 1)
+(encode-symbol 'd sample-tree)
+; (1 1 0)
+(encode '(a d a b b c a) sample-tree)
+; (0 1 1 0 0 1 0 1 0 1 1 1 0)
+(equal? sample-message (encode '(a d a b b c a) sample-tree))
+; #t
+
+;-- 2.69
+; Given:
+(define (generate-huffman-tree-1 pairs)
+  (successive-merge-1 (make-leaf-set pairs)))
+; Answer
+(define (successive-merge-1 leaves)
+  (if (= (length leaves) 2)
+      (make-code-tree (car leaves) (cadr leaves))
+      (successive-merge-1 (cons (make-code-tree (car leaves) (cadr leaves))
+                                (cddr leaves)))))
+; Test:
+(generate-huffman-tree-1 '((A 4) (B 2) (C 1) (D 1)))
+;((((leaf d 1) (leaf c 1) (d c) 2) (leaf b 2) (d c b) 4) (leaf a 4) (d c b a) 8)
+
+; NB: this only works because of the special 1 1 2 4 case we're in here. Using this algorithm on the first Huffman tree yields an incorrect result:
+(generate-huffman-tree-1 '((A 8) (B 3) (C 1) (D 1) (E 1) (F 1) (G 1) (H 1)))
+;((((((((leaf h 1) (leaf g 1) (h g) 2) (leaf f 1) (h g f) 3) (leaf e 1) (h g f e) 4) (leaf d 1) (h g f e d) 5) (leaf c 1) (h g f e d c) 6) (leaf b 3) (h g f e d c b) 9) (leaf a 8) (h g f e d c b a) 17)
+
+; The correct way to do it is by using adjoin-set instead of cons:
+(define (successive-merge nodes)
+  (if (= (length nodes) 1)
+    (car nodes)
+    (successive-merge2 (adjoin-set (make-code-tree (car nodes) (cadr nodes))
+                                   (cddr nodes)))))
+(define (generate-huffman-tree pairs)
+  (successive-merge (make-leaf-set pairs)))
+(generate-huffman-tree '((A 8) (B 3) (C 1) (D 1) (E 1) (F 1) (G 1) (H 1)))
+;((leaf a 8) ((((leaf h 1) (leaf g 1) (h g) 2) ((leaf f 1) (leaf e 1) (f e) 2) (h g f e) 4) (((leaf d 1) (leaf c 1) (d c) 2) (leaf b 3) (d c b) 5) (h g f e d c b) 9) (a h g f e d c b) 17)
+
+;-- 2.70
+(define rocktree (generate-huffman-tree '((A 2) (NA 16) (BOOM  1) (SHA 3) (GET 2) (YIP 9) (JOB 2) (WAH 1))))
+rocktree
+; ((leaf na 16) ((leaf yip 9) (((leaf a 2) ((leaf wah 1) (leaf boom 1) (wah boom) 2) (a wah boom) 4) ((leaf sha 3) ((leaf job 2) (leaf get 2) (job get) 4) (sha job get) 7) (a wah boom sha job get) 11) (yip a wah boom sha job get) 20) (na yip a wah boom sha job get) 36)
+(define rock-song '(Get a job Sha na na na na na na na na Get a job Sha na na na na na na na na Wah yip yip yip yip yip yip yip yip yip Sha boom))
+(define encoded-rock-song (encode rock-song rocktree))
+encoded-rock-song
+; (1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 0 1 1 1 1 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 1 1 0 1 1 0 1 1)
+(length encoded-rock-song)
+; 84
+
+; If we were to use a fixed-length encoding on that rock song, we would need 3 bits (8 = 2^3) per symbol, i.e.:
+(* 3 (length rock-song))
+; 108
+
+; We can see a 22% gain by using the huffman encoding
+
+;-- 2.71
+; Example with n=5. We will use letters from the alphabet to represent the symbols.
+;                     {a b c d e} 31
+;                     /           \
+;                {a b c d} 15      e 16
+;                 /     \
+;           {a b c} 7    d 8
+;             /    \
+;        {a b} 3    c 4
+;         /   \
+;      a 1    b 2
+
+; The minimum number of bits to construct a symbol (i.e. the minimum depth to reach a leaf) for such trees is 1, for the symbol of weight 2^n-1.
+; The maximum number of bits will be n-1, for the two symbols of least weight.
+
+;-- 2.72
+; Encoding the most frequent element as per ex. 2.71 is a mere search into the symbol list, which is accomplished in O(n).
+; Encoding the least frequent element involves descending down the tree, with a search in the symbol list each time.
+; The complexity is O(n) + O(n-1) + ... + O(1), akin to O(n²).
