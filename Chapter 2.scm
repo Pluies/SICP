@@ -1185,3 +1185,529 @@ encoded-rock-song
 ; Encoding the most frequent element as per ex. 2.71 is a mere search into the symbol list, which is accomplished in O(n).
 ; Encoding the least frequent element involves descending down the tree, with a search in the symbol list each time.
 ; The complexity is O(n) + O(n-1) + ... + O(1), akin to O(n²).
+
+;-- 2.73
+(define (deriv exp var)
+   (cond ((number? exp) 0)
+         ((variable? exp) (if (same-variable? exp var) 1 0))
+         (else ((get 'deriv (operator exp)) (operands exp)
+                                            var))))
+(define (operator exp) (car exp))
+(define (operands exp) (cdr exp))
+
+; a.
+; What was done above: we switched to data-directed programming. Yay!
+; We cannot use this method for number? and variable? because these never have the same operator.
+; By comparison, we can implement sum? and product? because the first symbol is always identical (+
+; and *).
+
+; b.
+(define (install-deriv-package)
+  ;; internal procedures
+  (define (addend s) (car s))
+  (define (augend s) (cadr s))
+  (define (multiplier p) (car p))
+  (define (multiplicand p) (cadr p))
+  (define (sum? x)
+    (and (pair? x) (eq? (car x) '+)))
+  (define (product? x)
+    (and (pair? x) (eq? (car x) '*)))
+  (define (make-sum a1 a2)
+    (cond ((=number? a1 0) a2)
+          ((=number? a2 0) a1)
+          ((and (number? a1) (number? a2)) (+ a1 a2))
+          (else (list '+ a1 a2))))
+  (define (=number? exp num)
+    (and (number? exp) (= exp num)))
+  (define (make-product m1 m2)
+    (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+          ((=number? m1 1) m2)
+          ((=number? m2 1) m1)
+          ((and (number? m1) (number? m2)) (* m1 m2))
+          (else (list '* m1 m2))))
+  (define (compute-sum sum var)
+    (make-sum (deriv (addend sum) var)
+              (deriv (augend sum) var)))
+  (define (compute-product pro var)
+    (make-sum
+      (make-product (multiplier pro)
+                    (deriv (multiplicand pro) var))
+      (make-product (deriv (multiplier pro) var)
+                    (multiplicand pro))))
+  ;; interface to the rest of the system
+  (put 'sum? '(deriv) sum?)
+  (put 'product? '(deriv) product?)
+  (put '+ 'deriv compute-sum)
+  (put '* 'deriv compute-product)
+  'done)
+
+; NB: This is all highly untested, and probably false.
+; Chapter 3 will allow us to implement tables. We'll test it when we get there.
+
+; c.
+(define (install-deriv-exp-package)
+  ; Internal:
+  (define (exponentiation? x)
+    (and (pair? x) (eq? (car x) '** )))
+  (define base car)
+  (define exponent cadr)
+  (define (make-exponentiation base exponent)
+    (cond ((=number? base 1) 1)
+          ((=number? exponent 0) 1)
+          ((=number? exponent 1) base)
+          ((and (number? base) (number? exponent)) (expt base exponent))
+          (else (list '** base exponent))))
+  (define (compute-exponentiation exp var)
+    (make-product (make-product (exponent exp)
+                                (make-exponentiation (base exp)
+                                                     (if (number? (exponent exp))
+                                                        (- (exponent exp) 1)
+                                                        (list '- (exponent exp) '1))))
+                  (deriv (base exp) var)))
+  ; Interface:
+  (put 'exponentiation? '(deriv) exponentiation?)
+  (put '** 'deriv compute-exponentiation)
+  'done)
+
+; Highly untested too.
+
+; d.
+; ?
+
+;-- 2.74
+; a.
+; Each division will put their method in the table.
+(put 'get-record 'sales-division get-salesman)
+(put 'get-record 'hr-division human-ressources-get-person)
+; etc.
+; We can then use this method to retrieve the correct record:
+(define (get-record division employee)
+  ((get 'get-record division) employee))
+
+; b.
+; Same thing:
+(put 'get-salary 'sales-division get-salesman-salary)
+(put 'get-salary 'hr-division needlessly-convoluted-method-of-retrieving-salary)
+
+(define (get-salary division employee)
+  ((get 'get-salary division) (get-record division employee)))
+
+; c.
+(define (find-employee-record name division-list)
+  (if (null? division-list)
+      #f
+      (if (memq name (car division-list))
+          #t
+          (find-employee-record name (cdr division-list)))))
+
+; d.
+; Make them use an unique identifier.
+
+;-- 2.75
+; We can implement make-from-real-imag in message-passing style as follows:
+(define (make-from-real-imag x y)
+  (define (dispatch op)
+    (cond ((eq? op 'real-part) x)
+          ((eq? op 'imag-part) y)
+          ((eq? op 'magnitude)
+           (sqrt (+ (square x) (square y))))
+          ((eq? op 'angle) (atan y x))
+          (else
+           (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+  dispatch)
+(define (apply-generic op arg) (arg op))
+
+; Implement the constructor make-from-mag-ang in message-passing style:
+(define (make-from-mag-ang r A)
+  (define (dispatch op)
+    (cond ((eq? op 'real-part) (* r (cos A)))
+          ((eq? op 'imag-part) (* r (sin A)))
+          ((eq? op 'magnitude) r)
+          ((eq? op 'angle) A)
+          (else
+            (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+  dispatch)
+
+;-- 2.76
+
+;-- 2.77
+
+;-- 2.78
+(define (attach-tag type-tag contents)
+  (if (not (equal? 'scheme-number type-tag))
+    (cons type-tag contents)))
+(define (type-tag datum)
+  (cond ((pair? datum) (car datum))
+        ((number? datum) 'scheme-number)
+        (else (error "Bad tagged datum -- TYPE-TAG" datum))))
+(define (contents datum)
+  (cond ((pair? datum) (cdr datum))
+        ((number? datum) datum)
+        (else (error "Bad tagged datum -- CONTENTS" datum))))
+
+;-- 2.79
+(define install-equ-package
+  (put 'equ? '(scheme-number scheme-number) =)
+  (put 'equ? '(rational rational)
+    (lambda (x y)
+      (= (* (numer x) (denom y))
+         (* (numer y) (denom x)))))
+  (put 'equ? '(complex complex)
+    (lambda (x y)
+      (and (= (real-part x) (real-part y))
+           (= (imag-part x) (imag-part y)))))
+  'done)
+(define (equ? x y)
+  (apply-generic 'equ? x y))
+
+; Another version, using =zero? as defined in the next exercise:
+(define (equ? x y)
+  (=zero? (sub x y)))
+
+;-- 2.80
+(define install-zero-package
+  (put '=zero? '(scheme-number) zero?)
+  (put '=zero? '(complex)
+    (lambda (x) (and (zero? (imag-part a)) (zero? (real-part a)))))
+  (put '=zero? '(rational)
+    (lambda (x) (zero? (numer x))))
+  'done)
+(define (=zero? x)
+  (apply-generic '=zero? x))
+
+;-- 2.81
+; apply-generic with coercion is defined as:
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (let ((t1->t2 (get-coercion type1 type2))
+                      (t2->t1 (get-coercion type2 type1)))
+                  (cond (t1->t2
+                         (apply-generic op (t1->t2 a1) a2))
+                        (t2->t1
+                         (apply-generic op a1 (t2->t1 a2)))
+                        (else
+                         (error "No method for these types"
+                                (list op type-tags))))))
+              (error "No method for these types"
+                     (list op type-tags)))))))
+
+; a.
+; Given:
+(define (scheme-number->scheme-number n) n)
+(define (complex->complex z) z)
+(put-coercion 'scheme-number 'scheme-number
+              scheme-number->scheme-number)
+(put-coercion 'complex 'complex complex->complex)
+(define (exp x y) (apply-generic 'exp x y))
+;; following added to Scheme-number package
+(put 'exp '(scheme-number scheme-number)
+     (lambda (x y) (tag (expt x y)))) ; using primitive expt
+; What happens if we call exp with two complex numbers as arguments?
+
+; Calling exp with two complex will result in an infinite loop. apply-generic will find both
+; t1->t2 and t2->t1 procedures (both will be complex->complex) and recurse into apply-generic
+; with the same types, complex & complex.
+
+; b.
+; Louis Reasoner appears to be wrong. As is, apply-generic will raise an error given
+; - no method taking t1 and t2 exists
+; - no conversion between t1 and t2 is available.
+
+; c.
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (if (and (= (length args) 2) (not (eq? (car type-tags) (cadr type-tags))))
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (let ((t1->t2 (get-coercion type1 type2))
+                      (t2->t1 (get-coercion type2 type1)))
+                  (cond (t1->t2
+                         (apply-generic op (t1->t2 a1) a2))
+                        (t2->t1
+                         (apply-generic op a1 (t2->t1 a2)))
+                        (else
+                         (error "No method for these types"
+                                (list op type-tags))))))
+              (error "No method for these types"
+                     (list op type-tags)))))))
+
+;-- 2.82
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (let ((working-type (find-working-type op args type-tags)))
+            (if working-type
+                (apply-generic op (map (lambda (arg)
+                                         (if (eq? (type-tag arg) working-type)
+                                             arg
+                                             ((get-coercion (type-tag arg) working-type) arg)))
+                                       args))
+                (error "No method for these types" (list op type-tags))))))))
+; With find-working-type defined as:
+(define (find-working-type op type-tags)
+  (define (check-coercions type-tags new-type)
+    (if (null? type-tags)
+        #t
+        (if (or (eq? (car type-tags) new-type)
+                (get-coercion (car type-tags) new-type))
+            (check-coercions (cdr type-tags) new-type)
+            #f)))
+  (define (find-iter op type-tags type-tags-to-test)
+    (if (null? type-tags-to-test)
+        #f
+        (let* ((tested-tag (car type-tags-to-test))
+               (proc (get op (map (lambda (x) tested-tag)
+                                 type-tags))))
+          (if proc ; there is a procedure that takes all arguments as tested-tag
+              (if (check-coercions type-tags tested-tag) ; and we can convert all arguments to said tested-tag
+                  tested-tag
+                  (find-iter op type-tags (cdr to-test)))))))
+  (find-iter op type-tags type-tags))
+
+; NB: untested.
+
+;-- 2.83
+(define install-raise-package
+  (put 'raise '(scheme-number)
+    (lambda (x) (make-rat x 1)))
+  (put 'raise '(rational)
+    (lambda (x) (make-real (/ (numer x) (denom x)))))
+  (put 'raise '(real)
+    (lambda (x) (make-from-real-imag x 0)))
+  'done)
+(define (raise x)
+  (apply-generic 'raise x))
+
+;-- 2.84
+(define typelist '(complex real rational scheme-number))
+(define (is-higher type1 type2)
+  (let* ((type1-sublist (memq type1 typelist)))
+    (if type1-sublist
+        (if (memq type2 type1-sublist)
+            #t
+            #f)
+        #f)))
+
+; Adapting apply-generic from 2.82:
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (let ((working-type (find-working-type op args type-tags)))
+            (if working-type
+                (apply-generic op (map (lambda (arg) (raise-until working-type arg))
+                                       args))
+                (error "No method for these types" (list op type-tags))))))))
+(define (raise-until type element)
+  (if (eq? type (type-tage element))
+      element
+      (raise-until type (raise element))))
+
+;-- 2.85
+(define install-project-package
+  (put 'project '(rational)
+    (lambda (x) (make-scheme-number (round (/ (numer x) (denom x))))))
+  (put 'project '(real)
+    (lambda (x) (make-rat (round x) 1)))
+  (put 'project '(complex)
+    (lambda (x) (make-real (real-part x))))
+  'done)
+(define (project x)
+  (apply-generic 'project x))
+
+(define (drop x)
+  (if (equ? x (raise (project x)))
+      (drop (project x))
+      x))
+
+; In order to drop the result of apply-generic:
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (drop (apply proc (map contents args)))
+          (let ((working-type (find-working-type op args type-tags)))
+            (if working-type
+                (drop (apply-generic op (map (lambda (arg) (raise-until working-type arg))
+                                             args)))
+                (error "No method for these types" (list op type-tags))))))))
+
+;-- 2.86
+; Complicated question. Needs further research.
+
+;-- 2.87
+; Given:
+(define (install-polynomial-package)
+  ;; internal procedures
+  ;; representation of poly
+  (define (make-poly variable term-list)
+    (cons variable term-list))
+  (define (variable p) (car p))
+  (define (term-list p) (cdr p))
+  (define (variable? x) (symbol? x))
+  (define (same-variable? v1 v2)
+    (and (variable? v1) (variable? v2) (eq? v1 v2)))
+  ;; representation of terms and term lists
+  (define (adjoin-term term term-list)
+    (if (=zero? (coeff term))
+        term-list
+        (cons term term-list)))
+  (define (the-empty-termlist) '())
+  (define (first-term term-list) (car term-list))
+  (define (rest-terms term-list) (cdr term-list))
+  (define (empty-termlist? term-list) (null? term-list))
+  (define (make-term order coeff) (list order coeff))
+  (define (order term) (car term))
+  (define (coeff term) (cadr term))
+
+  (define (add-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (make-poly (variable p1)
+                   (add-terms (term-list p1)
+                              (term-list p2)))
+        (error "Polys not in same var -- ADD-POLY"
+               (list p1 p2))))
+  (define (mul-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (make-poly (variable p1)
+                   (mul-terms (term-list p1)
+                              (term-list p2)))
+        (error "Polys not in same var -- MUL-POLY"
+               (list p1 p2))))
+  ;; interface to rest of the system
+  (define (tag p) (attach-tag 'polynomial p))
+  (put 'add '(polynomial polynomial)
+       (lambda (p1 p2) (tag (add-poly p1 p2))))
+  (put 'mul '(polynomial polynomial)
+       (lambda (p1 p2) (tag (mul-poly p1 p2))))
+  (put 'make 'polynomial
+       (lambda (var terms) (tag (make-poly var terms))))
+  'done)
+(define (add-terms L1 L2)
+  (cond ((empty-termlist? L1) L2)
+        ((empty-termlist? L2) L1)
+        (else
+         (let ((t1 (first-term L1)) (t2 (first-term L2)))
+           (cond ((> (order t1) (order t2))
+                  (adjoin-term
+                   t1 (add-terms (rest-terms L1) L2)))
+                 ((< (order t1) (order t2))
+                  (adjoin-term
+                   t2 (add-terms L1 (rest-terms L2))))
+                 (else
+                  (adjoin-term
+                   (make-term (order t1)
+                              (add (coeff t1) (coeff t2)))
+                   (add-terms (rest-terms L1)
+                              (rest-terms L2)))))))))
+(define (mul-terms L1 L2)
+  (if (empty-termlist? L1)
+      (the-empty-termlist)
+      (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                 (mul-terms (rest-terms L1) L2))))
+(define (mul-term-by-all-terms t1 L)
+  (if (empty-termlist? L)
+      (the-empty-termlist)
+      (let ((t2 (first-term L)))
+        (adjoin-term
+         (make-term (+ (order t1) (order t2))
+                    (mul (coeff t1) (coeff t2)))
+         (mul-term-by-all-terms t1 (rest-terms L))))))
+
+(define (make-polynomial var terms)
+  ((get 'make 'polynomial) var terms))
+
+; Question:
+(define install-zero-poly-package
+  (put '=zero? 'polynomial
+    (lambda (poly) (= 0
+                      (fold-left + 0 (map coeff (term-list poly)))))
+  'done)
+
+;-- 2.88
+(define install-sub-package
+  (define (negation termlist)
+    (map (lambda (term) (make-term (order term) (- (coeff term))))
+         termlist))
+  (define (sub-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (make-poly (variable p1)
+                   (add-terms (term-list p1)
+                              (negation (term-list p2))))
+        (error "Polys not in same var -- SUB-POLY"
+               (list p1 p2))))
+  (put 'sub '(polynomial polynomial)
+       (lambda (p1 p2) (tag (sub-poly p1 p2))))
+  'done)
+
+;-- 2.89
+(define (install-dense-polynomial-package)
+  ;; representation of terms and term lists - the rest stays the same
+  (define (adjoin-term term term-list)
+    (if (=zero? (coeff term))
+        term-list
+        (if (= (order term) (length term-list)) ; i.e. lower orders are all occupied
+          (cons (coeff term) term-list)
+          (adjoin-term term (cons 0 term-list))))) ; We will pad with 0 as needed
+  (define (the-empty-termlist) '())
+  (define (first-term term-list)
+    (if (null? (cdr term-list))
+      (car term-list)
+      (first-term (cdr term-list))))
+  (define (empty-termlist? term-list) (null? term-list))
+  (define (order term) (car term))
+  (define (coeff term) (cadr term))
+  'done)
+; And we redefine add-terms and mul-terms:
+(define (zip list1 list2)
+  (map list list1 list2))
+(define (pad lst target-length padding)
+  (if (= (length lst) target-length)
+    lst
+    (pad (cons padding lst) target-length padding)))
+(define (add-terms L1 L2)
+  ; zipping the two list will give us coefficient pairs. We will merely have to sum these lists using a fold
+  (let ((ml (max (length L1) (length L2))))
+    (map (lambda (l) (apply + l))
+         (zip (pad L1 ml 0) (pad L2 ml 0)))))
+(define (mul-terms L1 L2)
+  (let ((ml (max (length L1) (length L2))))
+    (map (lambda (l) (apply * l))
+         (zip (pad L1 ml 1) (pad L2 ml 1)))))
+
+;-- 2.90
+; This is a major effort, not a local change. <= okay, maybe later then.
+
+;-- 2.91
+(define (div-terms L1 L2)
+  (if (empty-termlist? L1)
+      (list (the-empty-termlist) (the-empty-termlist))
+      (let ((t1 (first-term L1))
+            (t2 (first-term L2)))
+        (if (> (order t2) (order t1))
+            (list (the-empty-termlist) L1)
+            (let ((new-c (div (coeff t1) (coeff t2)))
+                  (new-o (- (order t1) (order t2))))
+              (let ((rest-of-result (div-terms (rest-terms L1) (rest-terms L2)) ))
+                (add-terms (make-term new-c new-o) rest-of-result)
+                ))))))
+; NB: untested.
+
+;-- 2.92
+; "(This is not easy!)" <= Hmm... Exercise 2.93 to 2.97 are in the same (mathematical) vein, so I'll leave them alone for the time being.
