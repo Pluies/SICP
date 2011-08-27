@@ -106,7 +106,13 @@
     (combiner (if (filter a)
 		(term a)
 		null-value)
-	      (filtered-accumulate combiner null-value filter term (next a) next b))))
+	      (filtered-accumulate combiner
+						  null-value
+						  filter
+						  term
+						  (next a)
+						  next
+						  b))))
 
 ; a.
 (define (square x) (* x x))

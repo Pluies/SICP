@@ -45,8 +45,9 @@
   (display ")"))
 
 ;-- 2.3
-(define (rectangle a b c d) ; Where a, b, c and d are (x,y) pairs representing points coordinates as : a   b
-  (cons (cons a b) (cons c d)))                                                                      ; d   c
+(define (rectangle a b c d) ; Where a, b, c and d are (x,y) pairs representing
+  					   ; points coordinates as : a   b
+  (cons (cons a b) (cons c d)))                     ; d   c
 (define (point_a r) (car (car r)))
 (define (point_b r) (cdr (car r)))
 (define (point_c r) (car (cdr r)))
@@ -182,7 +183,8 @@
 ;                 3   4
 
 ;-- 2.25
-; Give combinations of cars and cdrs that will pick 7 from each of the following lists:
+; Give combinations of cars and cdrs that will pick 7 from each of the
+; following lists:
 ; (1 3 (5 7) 9)
 (define A (list 1 3 (list 5 7) 9))
 (car (cdr (car (cdr (cdr a)))))
@@ -197,7 +199,8 @@
 ; Suppose we define x and y to be two lists:
 (define x (list 1 2 3))
 (define y (list 4 5 6))
-; What result is printed by the interpreter in response to evaluating each of the following expressions:
+; What result is printed by the interpreter in response to evaluating each of
+; the following expressions:
 (append x y)
 ; (1 2 3 4 5 6)
 (cons x y)
@@ -325,7 +328,8 @@
 
 ;-- 2.34
 (define (horner-eval x coefficient-sequence)
-  (accumulate (lambda (this-coeff higher-terms) (+ (* x higher-terms) this-coeff))
+  (accumulate (lambda (this-coeff higher-terms) (+ (* x higher-terms)
+										 this-coeff))
 	      0
 	      coefficient-sequence))
 ; Test:
@@ -350,7 +354,10 @@
     (cons (accumulate op init (map car seqs))
 	  (accumulate-n op init (map cdr seqs)))))
 ; Test:
-(define listoflist (list (list 1 2 3) (list 4 5 6) (list 7 8 9) (list 10 11 12)))
+(define listoflist (list (list 1 2 3)
+					(list 4 5 6)
+					(list 7 8 9)
+					(list 10 11 12)))
 (accumulate-n + 0 listoflist)
 ; => (22 26 30)
 
@@ -402,11 +409,13 @@
 (fold-left list nil (list 1 2 3))
 ; (((() 1)  2)  3)
 
-; Give a property that op should satisfy to guarantee that fold-right and fold-left will produce the same values for any sequence. 
+; Give a property that op should satisfy to guarantee that fold-right and
+; fold-left will produce the same values for any sequence. 
 ; Let's take a (list 1 2 3) and fold it:
 ; Fold-right => (op 3 (op 2 (op 1 nil)))  Ex. (3 * ( 2 * (1)))
 ; Fold-left => (op (op (op nil 1) 2) 3)   Ex. (((1)*2)*3)
-; To me it looks like commutativity. However, others point at associativity instead. To investigate.
+; To me it looks like commutativity. However, others point at associativity
+; instead. To investigate.
 ; Commutativity: https://secure.wikimedia.org/wikipedia/en/wiki/Commutativity
 ; Associativity: https://secure.wikimedia.org/wikipedia/en/wiki/Associativity
 
@@ -475,7 +484,9 @@
        (filter prime-sum? (unique-pairs n))))
 
 ;-- 2.41
-; Write a procedure to find all ordered triples of distinct positive integers i, j, and k less than or equal to a given integer n that sum to a given integer s. 
+; Write a procedure to find all ordered triples of distinct positive integers
+; i, j, and k less than or equal to a given integer n that sum to a given
+; integer s. 
 (define (ordered-triples n s)
   (filter (lambda (triple) (= (fold-left + 0 triple) s))
 	  (flatmap (lambda (i)
@@ -525,9 +536,13 @@
 (define empty-board '())
 (define (adjoin-position new-row k rest-of-queens)
   (append (list (cons k new-row)) rest-of-queens))
-(define (same-line queen-a queen-b) ; Coordinates are (x,y) pairs. If the y is the same for both queens, they are on the same line.
+(define (same-line queen-a queen-b) ; Coordinates are (x,y) pairs. If the y is
+  							 ; the same for both queens, they are on the
+							 ; same line.
   (= (cdr queen-a) (cdr queen-b)))
-(define (same-diagonal queen-a queen-b) ; Two queens are on the same diagonal if there horizontal distance is equal to their vertical distance
+(define (same-diagonal queen-a queen-b) ; Two queens are on the same diagonal
+  								; if there horizontal distance is equal
+								; to their vertical distance
   (= (- (car queen-a) (car queen-b))
      (abs (- (cdr queen-a) (cdr queen-b)))))
 (define (safe? k positions)
@@ -563,10 +578,12 @@
     (let ((smaller (up-split painter (- n 1))))
       (below painter (beside smaller smaller)))))
 
-;Right-split and up-split can be expressed as instances of a general splitting operation. Define a procedure split with the property that evaluating
-;(define right-split (split beside below))
-;(define up-split (split below beside))
-;produces procedures right-split and up-split with the same behaviors as the ones already defined. 
+; Right-split and up-split can be expressed as instances of a general splitting
+; operation. Define a procedure split with the property that evaluating
+; (define right-split (split beside below))
+; (define up-split (split below beside))
+; produces procedures right-split and up-split with the same behaviors as the
+; ones already defined. 
 
 (define (split first-transform second-transform)
   (define (new-split painter n)
@@ -576,13 +593,16 @@
 	(first-transform painter (second-transform smaller smaller)))))
   (lambda (painter n) (new-split painter n)))
 
-; A cleverer version that avoids having to name the lambda in order to recurse, from the scheme wiki:
+; A cleverer version that avoids having to name the lambda in order to recurse,
+; from the scheme wiki:
 (define (split first-transform second-transform)
   (lambda (painter n)
     (if (= n 0)
-      painter
-      (let ((smaller ((split first-transform second-transform) painter (- n 1))))
-	(first-transform painter (second-transform smaller smaller))))))
+	 painter
+	 (let ((smaller ((split first-transform second-transform)
+				  painter
+				  (- n 1))))
+	   (first-transform painter (second-transform smaller smaller))))))
 
 ;-- 2.46
 (define (make-vect x y)
@@ -660,7 +680,8 @@
 (define (variable? x) (symbol? x))
 (define (same-variable? v1 v2)
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
-(define (make-sum a1 a2) (list '+ a1 a2))     ; Naive implementation; is replaced afterwards
+(define (make-sum a1 a2) (list '+ a1 a2)) ; Naive implementation; will be
+								  ; replaced afterwards
 (define (make-product m1 m2) (list '* m1 m2)) ; Same
 (define (sum? x)
   (and (pair? x) (eq? (car x) '+)))
@@ -751,7 +772,8 @@
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
 	((=number? m1 1) m2)
 	((=number? m2 1) m1)
-	((product? m2) (make-product m1 (make-product (multiplier m2) (multiplicand m2))))
+	((product? m2) (make-product m1 (make-product (multiplier m2)
+										 (multiplicand m2))))
 	((and (number? m1) (number? m2)) (* m1 m2))
 	(else (list '* m1 m2))))
 
@@ -791,7 +813,8 @@
 ;-- 2.59
 ; Functions given:
 (define (element-of-set? x set)
-  (cond ((null? set) #f) ;"false" and "true" replaced by their Scheme equivalent for convenience
+  (cond ((null? set) #f) ; "false" and "true" replaced by their Scheme
+	   				; equivalent for convenience
 	((equal? x (car set)) #t)
 	(else (element-of-set? x (cdr set)))))
 (define (adjoin-set x set)
@@ -807,7 +830,8 @@
 
 ; Union:
 (define (union-set set1 set2)
-  (cond ((null? set1) set2) ; We'll add elements of set1 to set2 (given they're not already present in set2)
+  (cond ((null? set1) set2) ; We'll add elements of set1 to set2 (given they're
+	   				   ; not already present in set2)
 	((element-of-set? (car set1) set2)
 	 (union-set (cdr set1) set2))
 	(else (cons (car set1)
@@ -834,7 +858,8 @@
 (intersection-set s1 s3)
 ; (5)
 
-; Efficiency: by eliminating the need to walk the list, adjoin is now O(1) instead of O(n).
+; Efficiency: by eliminating the need to walk the list, adjoin is now O(1)
+; instead of O(n).
 ; union becomes O(n) instead of O(n²)
 
 ;-- 2.61
@@ -881,9 +906,10 @@
 	     (cons x1 (union-set (cdr set1) set2)))
 	    ((< x2 x1)
 	     (cons x2 (union-set set1 (cdr set2))))))))
-; This implementation is O(n) because each iteration selects an item from either set1 or
-; set2 and cons it (an O(1) operation). There are n iterations at most, n being the length
-; of set1 + the length of set2, hence an O(n) total complexity.
+; This implementation is O(n) because each iteration selects an item from
+; either set1 or set2 and cons it (an O(1) operation). There are n iterations
+; at most, n being the length of set1 + the length of set2, hence an O(n) total
+; complexity.
 
 ; Test:
 (define s1 (list 1 2 3 4 5))
@@ -899,7 +925,7 @@
 (define (make-tree entry left right)
   (list entry left right))
 (define (element-of-set? x set)
-  (cond ((null? set) #f) ; Changed "true" to #t and false to #f according to Scheme syntax
+  (cond ((null? set) #f)
 	((= x (entry set)) #t)
 	((< x (entry set))
 	 (element-of-set? x (left-branch set)))
@@ -923,7 +949,8 @@
 (define t1 (list 7 (list 3 (list 1 '() '()) (list 5 '() '())) (list 9 '() (list 11 '() '()))))
 (define t2 (list 3 (list 1 '() '()) (list 7 (list 5 '() '()) (list 9 '() (list 11 '() '())))))
 (define t3 (list 5 (list 3 (list 1 '() '()) '()) (list 9 (list 7 '() '()) (list 11 '() '()))))
-; If not, how do the results differ? What lists do the two procedures produce for the trees in figure 2.16?
+; If not, how do the results differ? What lists do the two procedures produce
+; for the trees in figure 2.16?
 ; Both tree->list algorithm will print (1 3 5 7 9 11) for the three trees.
 
 ; b.
@@ -949,12 +976,16 @@
 		    remaining-elts))))))))
 
 ; a.
-; Partial-tree splits the list given in two parts of equal size (modulo 1). Both halves are submitted to partial-tree through recursion.
-; The recursive procedures will yield a pair made of the subtree and the list of elements that didn't make it into said subtree. By
-; splitting the process between right and left hands, we will ensure that we have a correctly balanced tree. The stop condition for
-; partial-tree is asking a tree made of 0 elements, who will yield a pair made of an empty list and the list of items.
-; Finally, these halves are assembled by a make-tree between the value at the middle of the list (strictly speaking the leftmost of
-; the right half) and the left and right trees computed beforehand.
+; Partial-tree splits the list given in two parts of equal size (modulo 1).
+; Both halves are submitted to partial-tree through recursion. The recursive
+; procedures will yield a pair made of the subtree and the list of elements
+; that didn't make it into said subtree. By splitting the process between right
+; and left hands, we will ensure that we have a correctly balanced tree. The
+; stop condition for partial-tree is asking a tree made of 0 elements, who will
+; yield a pair made of an empty list and the list of items.
+; Finally, these halves are assembled by a make-tree between the value at the
+; middle of the list (strictly speaking the leftmost of the right half) and the
+; left and right trees computed beforehand.
 ; This only works with ordered lists containing no duplicates.
 
 ; Tree given for (1 3 5 7 9 11):
@@ -986,9 +1017,11 @@
       (union-tree-list (adjoin-set (car l) t) (cdr l))))
   (union-tree-list tree1 (tree->list-1 tree2)))
 ; Complexity:
-; intersection uses an O(log n) filter on an O(n) walk of the elements of a list. It's O(n * log n)
+; intersection uses an O(log n) filter on an O(n) walk of the elements of a
+; list. It's O(n * log n)
 ; union uses an O(log n) insertion on an O(n) walk: it's O(n * log n) too.
-; These algorithms are poor, in the sense that they don't reuse previous techniques.
+; These algorithms are poor, in the sense that they don't reuse previous
+; techniques.
 
 ; Second try:
 (define tree->list tree->list-1)
@@ -998,7 +1031,8 @@
 (define (union-set-tree tree1 tree2)
   (list->tree (union-set (tree->list tree1)
 			 (tree->list tree2))))
-; Complexity: all operations are O(n) as shown in 2.62 and performed sequentially; hence the result is O(n) too.
+; Complexity: all operations are O(n) as shown in 2.62 and performed
+; sequentially; hence the result is O(n) too.
 
 ; Test:
 (define t1 (list 7 (list 3 (list 1 '() '()) (list 5 '() '())) (list 9 '() (list 11 '() '()))))
@@ -1013,9 +1047,10 @@
 ; (7 (1 () ()) (9 () (11 () ())))
 (union-set-tree t1 t2)
 ; (5 (3 (1 () ()) (4 () ())) (7 (6 () ()) (9 () (11 () ()))))
-; The difference between the two union-set stems from the fact that the first version
-; merely adds elements from tree2 to tree1, while the second version flattens both trees,
-; creates a new list and turns that list into a balanced tree.
+; The difference between the two union-set stems from the fact that the first
+; version merely adds elements from tree2 to tree1, while the second version
+; flattens both trees, creates a new list and turns that list into a balanced
+; tree.
 
 ;-- 2.66
 (define (lookup given-key set-of-records)
@@ -1134,7 +1169,8 @@
 (generate-huffman-tree-1 '((A 4) (B 2) (C 1) (D 1)))
 ;((((leaf d 1) (leaf c 1) (d c) 2) (leaf b 2) (d c b) 4) (leaf a 4) (d c b a) 8)
 
-; NB: this only works because of the special 1 1 2 4 case we're in here. Using this algorithm on the first Huffman tree yields an incorrect result:
+; NB: this only works because of the special 1 1 2 4 case we're in here. Using
+; this algorithm on the first Huffman tree yields an incorrect result:
 (generate-huffman-tree-1 '((A 8) (B 3) (C 1) (D 1) (E 1) (F 1) (G 1) (H 1)))
 ;((((((((leaf h 1) (leaf g 1) (h g) 2) (leaf f 1) (h g f) 3) (leaf e 1) (h g f e) 4) (leaf d 1) (h g f e d) 5) (leaf c 1) (h g f e d c) 6) (leaf b 3) (h g f e d c b) 9) (leaf a 8) (h g f e d c b a) 17)
 
@@ -1160,14 +1196,16 @@ encoded-rock-song
 (length encoded-rock-song)
 ; 84
 
-; If we were to use a fixed-length encoding on that rock song, we would need 3 bits (8 = 2^3) per symbol, i.e.:
+; If we were to use a fixed-length encoding on that rock song, we would need
+; 3 bits (8 = 2^3) per symbol, i.e.:
 (* 3 (length rock-song))
 ; 108
 
 ; We can see a 22% gain by using the huffman encoding
 
 ;-- 2.71
-; Example with n=5. We will use letters from the alphabet to represent the symbols.
+; Example with n=5. We will use letters from the alphabet to represent the
+; symbols.
 ;                     {a b c d e} 31
 ;                     /           \
 ;                {a b c d} 15      e 16
@@ -1178,12 +1216,15 @@ encoded-rock-song
 ;         /   \
 ;      a 1    b 2
 
-; The minimum number of bits to construct a symbol (i.e. the minimum depth to reach a leaf) for such trees is 1, for the symbol of weight 2^n-1.
+; The minimum number of bits to construct a symbol (i.e. the minimum depth to
+; reach a leaf) for such trees is 1, for the symbol of weight 2^n-1.
 ; The maximum number of bits will be n-1, for the two symbols of least weight.
 
 ;-- 2.72
-; Encoding the most frequent element as per ex. 2.71 is a mere search into the symbol list, which is accomplished in O(n).
-; Encoding the least frequent element involves descending down the tree, with a search in the symbol list each time.
+; Encoding the most frequent element as per ex. 2.71 is a mere search into the
+; symbol list, which is accomplished in O(n).
+; Encoding the least frequent element involves descending down the tree, with a
+; search in the symbol list each time.
 ; The complexity is O(n) + O(n-1) + ... + O(1), akin to O(n²).
 
 ;-- 2.73
@@ -1197,9 +1238,10 @@ encoded-rock-song
 
 ; a.
 ; What was done above: we switched to data-directed programming. Yay!
-; We cannot use this method for number? and variable? because these never have the same operator.
-; By comparison, we can implement sum? and product? because the first symbol is always identical (+
-; and *).
+; We cannot use this method for number? and variable? because these never have
+; the same operator.
+; By comparison, we can implement sum? and product? because the first symbol is
+; always identical (+ and *).
 
 ; b.
 (define (install-deriv-package)
@@ -1412,12 +1454,13 @@ encoded-rock-song
      (lambda (x y) (tag (expt x y)))) ; using primitive expt
 ; What happens if we call exp with two complex numbers as arguments?
 
-; Calling exp with two complex will result in an infinite loop. apply-generic will find both
-; t1->t2 and t2->t1 procedures (both will be complex->complex) and recurse into apply-generic
-; with the same types, complex & complex.
+; Calling exp with two complex will result in an infinite loop. apply-generic
+; will find both t1->t2 and t2->t1 procedures (both will be complex->complex)
+; and recurse into apply-generic with the same types, complex & complex.
 
 ; b.
-; Louis Reasoner appears to be wrong. As is, apply-generic will raise an error given
+; Louis Reasoner appears to be wrong. As is, apply-generic will raise an error
+; given
 ; - no method taking t1 and t2 exists
 ; - no conversion between t1 and t2 is available.
 
@@ -1474,7 +1517,8 @@ encoded-rock-song
 	     (proc (get op (map (lambda (x) tested-tag)
 				type-tags))))
 	(if proc ; there is a procedure that takes all arguments as tested-tag
-	  (if (check-coercions type-tags tested-tag) ; and we can convert all arguments to said tested-tag
+	  (if (check-coercions type-tags tested-tag); and we can convert all
+	    								    ; arguments to said tested-tag
 	    tested-tag
 	    (find-iter op type-tags (cdr to-test)))))))
   (find-iter op type-tags type-tags))
@@ -1544,7 +1588,8 @@ encoded-rock-song
 	(drop (apply proc (map contents args)))
 	(let ((working-type (find-working-type op args type-tags)))
 	  (if working-type
-	    (drop (apply-generic op (map (lambda (arg) (raise-until working-type arg))
+	    (drop (apply-generic op (map (lambda (arg) (raise-until working-type
+													arg))
 					 args)))
 	    (error "No method for these types" (list op type-tags))))))))
 
@@ -1662,7 +1707,7 @@ encoded-rock-song
   (define (adjoin-term term term-list)
     (if (=zero? (coeff term))
       term-list
-      (if (= (order term) (length term-list)) ; i.e. lower orders are all occupied
+      (if (= (order term) (length term-list)) ; i.e. lower orders are occupied
 	(cons (coeff term) term-list)
 	(adjoin-term term (cons 0 term-list))))) ; We will pad with 0 as needed
   (define (the-empty-termlist) '())
@@ -1682,7 +1727,8 @@ encoded-rock-song
     lst
     (pad (cons padding lst) target-length padding)))
 (define (add-terms L1 L2)
-  ; zipping the two list will give us coefficient pairs. We will merely have to sum these lists using a fold
+  ; zipping the two list will give us coefficient pairs. We will merely have
+  ; to sum these lists using a fold
   (let ((ml (max (length L1) (length L2))))
     (map (lambda (l) (apply + l))
 	 (zip (pad L1 ml 0) (pad L2 ml 0)))))
@@ -1710,4 +1756,5 @@ encoded-rock-song
 ; NB: untested.
 
 ;-- 2.92
-; "(This is not easy!)" <= Hmm... Exercise 2.93 to 2.97 are in the same (mathematical) vein, so I'll leave them alone for the time being.
+; "(This is not easy!)" <= Hmm... Exercise 2.93 to 2.97 are in the same
+; (mathematical) vein, so I'll leave them alone for the time being.
