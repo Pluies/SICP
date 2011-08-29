@@ -9,28 +9,28 @@
   (define times-called 0)
   (define (mf message)
     (cond ((eq? message 'how-many-calls?) times-called)
-	  ((eq? message 'reset-count) (set! times-called 0))
-	  (else (set! times-called (+ times-called 1))
-		(function message))))
+		((eq? message 'reset-count) (set! times-called 0))
+		(else (set! times-called (+ times-called 1))
+			 (function message))))
   mf)
 
 ;-- 3.3
 (define (make-account balance password)
   (define (withdraw amount)
     (if (>= balance amount)
-      (begin (set! balance (- balance amount))
-	     balance)
-      "Insufficient funds"))
+	 (begin (set! balance (- balance amount))
+		   balance)
+	 "Insufficient funds"))
   (define (deposit amount)
     (set! balance (+ balance amount))
     balance)
   (define (dispatch m given-password)
     (if (eq? password given-password)
-      (cond ((eq? m 'withdraw) withdraw)
-	    ((eq? m 'deposit) deposit)
-	    (else (error "Unknown request -- MAKE-ACCOUNT"
-			 m)))
-      (lambda (x) "Incorrect password")))
+	 (cond ((eq? m 'withdraw) withdraw)
+		  ((eq? m 'deposit) deposit)
+		  (else (error "Unknown request -- MAKE-ACCOUNT"
+					m)))
+	 (lambda (x) "Incorrect password")))
   dispatch)
 
 ;-- 3.4
@@ -38,23 +38,23 @@
   (define wrong-tries 0)
   (define (withdraw amount)
     (if (>= balance amount)
-      (begin (set! balance (- balance amount))
-	     balance)
-      "Insufficient funds"))
+	 (begin (set! balance (- balance amount))
+		   balance)
+	 "Insufficient funds"))
   (define (deposit amount)
     (set! balance (+ balance amount))
     balance)
   (define (dispatch m given-password)
     (if (eq? password given-password)
-      (begin (set! wrong-tries 0)
-	     (cond ((eq? m 'withdraw) withdraw)
-		   ((eq? m 'deposit) deposit)
-		   (else (error "Unknown request -- MAKE-ACCOUNT"
-				m))))
-      (begin (set! wrong-tries (+ wrong-tries 1))
-	     (if (> wrong-tries 7)
-	       call-the-cops
-	       (lambda (x) "Incorrect password")))))
+	 (begin (set! wrong-tries 0)
+		   (cond ((eq? m 'withdraw) withdraw)
+			    ((eq? m 'deposit) deposit)
+			    (else (error "Unknown request -- MAKE-ACCOUNT"
+						  m))))
+	 (begin (set! wrong-tries (+ wrong-tries 1))
+		   (if (> wrong-tries 7)
+			call-the-cops
+			(lambda (x) "Incorrect password")))))
   dispatch)
 
 ; call-the-cops example:
@@ -91,11 +91,11 @@
 (define (monte-carlo trials experiment)
   (define (iter trials-remaining trials-passed)
     (cond ((= trials-remaining 0)
-	   (/ trials-passed trials))
-	  ((experiment)
-	   (iter (- trials-remaining 1) (+ trials-passed 1)))
-	  (else
-	    (iter (- trials-remaining 1) trials-passed))))
+		 (/ trials-passed trials))
+		((experiment)
+		 (iter (- trials-remaining 1) (+ trials-passed 1)))
+		(else
+		  (iter (- trials-remaining 1) trials-passed))))
   (iter trials 0))
 (define (random-in-range low high)
   (let ((range (- high low)))
@@ -104,12 +104,12 @@
 ; Solution:
 (define (P x y)
   (< (+ (expt (- x 5) 2)
-	(expt (- y 7) 2))
-     (expt 3 2)))
+	   (expt (- y 7) 2))
+	(expt 3 2)))
 (define (estimate-integral P x1 x2 y1 y2 trials)
   (define (experiment)
     (P (random-in-range x1 x2)
-       (random-in-range y1 y2)))
+	  (random-in-range y1 y2)))
   (monte-carlo trials experiment))
 
 ; Test:
@@ -119,7 +119,7 @@
 ; Hence pi ≅ (Monte Carlo results * rectangle area) / r²
 (define pi-approx
   (/ (* (estimate-integral P 2.0 8.0 4.0 10.0 10000) 36)
-     9.0))
+	9.0))
 pi-approx
 ; 3.1336
 
@@ -128,18 +128,18 @@ pi-approx
 
 ; NB: using 2.0 instead of 2 in (estimate-integral) is primordial. If you pass
 ; two integers to (random-in-range low high), it will return another integer
-; strictly inferior to your 'high' value — and this completely screws the
+; strictly inferior to your 'high' value |   and this completely screws the
 ; Monte-Carlo method (it then estimates pi to ~3.00).
 
 ;-- 3.6
 (define rand
   (let ((x random-init))
     (define (dispatch message)
-      (cond ((eq? message 'generate)
-	     (begin (set! x (rand-update x))
-		    x))
-	    ((eq? message 'reset)
-	     (lambda (new-value) (set! x new-value)))))
+	 (cond ((eq? message 'generate)
+		   (begin (set! x (rand-update x))
+				x))
+		  ((eq? message 'reset)
+		   (lambda (new-value) (set! x new-value)))))
     dispatch))
 
 ; Test:
@@ -164,22 +164,22 @@ x
   (define password-list (list password))
   (define (withdraw amount)
     (if (>= balance amount)
-      (begin (set! balance (- balance amount))
-	     balance)
-      "Insufficient funds"))
+	 (begin (set! balance (- balance amount))
+		   balance)
+	 "Insufficient funds"))
   (define (deposit amount)
     (set! balance (+ balance amount))
     balance)
   (define (dispatch m given-password)
     (if (memq given-password password-list)
-      (cond ((eq? m 'withdraw) withdraw)
-	    ((eq? m 'deposit) deposit)
-	    ((eq? m 'joint) (lambda (new-pass)
-					  (set! password-list (cons new-pass password-list))
-					  dispatch))
-	    (else (error "Unknown request -- MAKE-ACCOUNT"
-				  m)))
-      (lambda (x) "Incorrect password")))
+	 (cond ((eq? m 'withdraw) withdraw)
+		  ((eq? m 'deposit) deposit)
+		  ((eq? m 'joint) (lambda (new-pass)
+						(set! password-list (cons new-pass password-list))
+						dispatch))
+		  (else (error "Unknown request -- MAKE-ACCOUNT"
+					m)))
+	 (lambda (x) "Incorrect password")))
   dispatch)
 (define (make-joint account password new-account-password)
   ((account 'joint password) new-account-password))
@@ -205,8 +205,8 @@ x
 (define f
   (let ((init (- 1)))
     (lambda (x) (if (= init (- 1))
-		  (set! init x)
-		  0))))
+			   (set! init x)
+			   0))))
 
 ;-- 3.9
 ;-- 3.10
@@ -217,26 +217,26 @@ x
   x)
 (define (last-pair x)
   (if (null? (cdr x))
-      x
-      (last-pair (cdr x))))
+    x
+    (last-pair (cdr x))))
 (define x (list 'a 'b))
 ;
-; x-> [*|*]->[*|/]
-;      |      |
+; x-> [*|  *]->[*|  /]
+;      |        |  
 ;      v      v
 ;     [a]    [b]
 ;
 (define y (list 'c 'd))
 ;
-; y-> [*|*]->[*|/]
-;      |      |
+; y-> [*|  *]->[*|  /]
+;      |        |  
 ;      v      v
 ;     [c]    [d]
 ;
 (define z (append x y))
 ;
-; z-> [*|*]->[*|*]->[*|*]->[*|/]
-;      |      |      |      |
+; z-> [*|  *]->[*|  *]->[*|  *]->[*|  /]
+;      |        |        |        |  
 ;      v      v      v      v
 ;     [a]    [b]    [c]    [d]
 ;
@@ -255,9 +255,9 @@ x
 (define z (make-cycle (list 'a 'b 'c)))
 ;         ___________
 ;       /             \
-;      v               |
-; z-> [*|*]->[*|*]->[*|*]
-;      |      |      |
+;      v               |  
+; z-> [*|  *]->[*|  *]->[*|  *]
+;      |        |        |  
 ;      v      v      v
 ;     [a]    [b]    [c]
 ;
@@ -268,10 +268,10 @@ x
 (define (mystery x)
   (define (loop x y)
     (if (null? x)
-        y
-        (let ((temp (cdr x)))
-          (set-cdr! x y)
-          (loop temp x))))
+	 y
+	 (let ((temp (cdr x)))
+	   (set-cdr! x y)
+	   (loop temp x))))
   (loop x '()))
 ; Mystery looks like a list-reversal function at first glance. Is it? Let's
 ; unroll it! We'll try with '(1 2 3)
@@ -297,14 +297,14 @@ x
 
 (define v (list 'a 'b 'c 'd))
 ;
-; v-> [*|*]->[*|*]->[*|*]->[*|/]
-;      |      |      |      |
+; v-> [*|  *]->[*|  *]->[*|  *]->[*|  /]
+;      |        |        |        |  
 ;      v      v      v      v
 ;     [a]    [b]    [c]    [d]
 ;
 (define w (mystery v))
-; w-> [*|*]->[*|*]->[*|*]->[*|/]
-;      |      |      |      |
+; w-> [*|  *]->[*|  *]->[*|  *]->[*|  /]
+;      |        |        |        |  
 ;      v      v      v      v
 ;     [d]    [c]    [b]    [a]
 ;                           ^
@@ -318,10 +318,10 @@ w
 ;-- 3.16
 (define (count-pairs x)
   (if (not (pair? x))
-      0
-      (+ (count-pairs (car x))
-         (count-pairs (cdr x))
-         1)))
+    0
+    (+ (count-pairs (car x))
+	  (count-pairs (cdr x))
+	  1)))
 ; Simpler case:
 (define three-pairs (list 'a 'b 'c))
 (count-pairs three-pairs)
@@ -351,15 +351,15 @@ w
   (define count 0)
   (define (visit pair)
     (if (not (memq pair visited))
-      (begin (set! visited (cons pair visited))
-             (set! count (+ 1 count)))))
+	 (begin (set! visited (cons pair visited))
+		   (set! count (+ 1 count)))))
   (define (populate-list x)
     (if (pair? x)
-      (begin (populate-list (car x))
-             (populate-list (cdr x))
-             (visit x))))
+	 (begin (populate-list (car x))
+		   (populate-list (cdr x))
+		   (visit x))))
   (begin (populate-list x)
-         count))
+	    count))
 ; Tests (as defined in 3.16):
 (count-pairs three-pairs)
 ; 3
@@ -377,16 +377,16 @@ w
   ; element is in the stack (i.e. there's a cycle).
   (define (test x stack)
     (if (pair? x)
-      (if (memq x stack)
-          #t
-          (test (cdr x) (cons x stack)))
-      #f))
+	 (if (memq x stack)
+	   #t
+	   (test (cdr x) (cons x stack)))
+	 #f))
   (test x '()))
 ; Test:
 (define (last-pair x)
   (if (null? (cdr x))
-      x
-      (last-pair (cdr x))))
+    x
+    (last-pair (cdr x))))
 (define (make-cycle x)
   (set-cdr! (last-pair x) x)
   x)
@@ -406,12 +406,12 @@ w
 (define (cycle? x)
   (define (cycle-iter tortoise hare)
     (cond ((eq? tortoise hare)
-            #t)
-          ((or (not (pair? tortoise))
-               (not (pair? hare))
-               (not (pair? (cdr hare))))
-            #f)
-          (else (cycle-iter (cdr tortoise) (cddr hare)))))
+		 #t)
+		((or (not (pair? tortoise))
+			(not (pair? hare))
+			(not (pair? (cdr hare))))
+		 #f)
+		(else (cycle-iter (cdr tortoise) (cddr hare)))))
   (if (pair? x)
     (cycle-iter x (cdr x))
     #f))
@@ -435,24 +435,24 @@ w
 (define (make-queue) (cons '() '()))
 (define (front-queue queue)
   (if (empty-queue? queue)
-      (error "FRONT called with an empty queue" queue)
-      (car (front-ptr queue))))
+    (error "FRONT called with an empty queue" queue)
+    (car (front-ptr queue))))
 (define (insert-queue! queue item)
   (let ((new-pair (cons item '())))
     (cond ((empty-queue? queue)
-           (set-front-ptr! queue new-pair)
-           (set-rear-ptr! queue new-pair)
-           queue)
-          (else
-           (set-cdr! (rear-ptr queue) new-pair)
-           (set-rear-ptr! queue new-pair)
-           queue))))
+		 (set-front-ptr! queue new-pair)
+		 (set-rear-ptr! queue new-pair)
+		 queue)
+		(else
+		  (set-cdr! (rear-ptr queue) new-pair)
+		  (set-rear-ptr! queue new-pair)
+		  queue))))
 (define (delete-queue! queue)
   (cond ((empty-queue? queue)
-         (error "DELETE! called with an empty queue" queue))
-        (else
-         (set-front-ptr! queue (cdr (front-ptr queue)))
-         queue)))
+	    (error "DELETE! called with an empty queue" queue))
+	   (else
+		(set-front-ptr! queue (cdr (front-ptr queue)))
+		queue)))
 
 ; Answer:
 ; The queue is actually empty. The rear-ptr isn't updated, but it doesn't
@@ -461,9 +461,9 @@ w
 (define (print-queue q)
   (define (print-list l)
     (if (not (null? l))
-      (begin (display (car l))
-             (newline)
-             (print-list (cdr l)))))
+	 (begin (display (car l))
+		   (newline)
+		   (print-list (cdr l)))))
   (if (null? (car q))
     (display "The queue is empty.\n")
     (print-list (car q))))
@@ -488,43 +488,43 @@ w
 ;-- 3.22
 (define (make-queue)
   (let ((front-ptr '())
-        (rear-ptr '()))
+	   (rear-ptr '()))
     (define (empty-queue?) (null? front-ptr))
     (define (front-queue)
-      (if (empty-queue?)
-          (error "FRONT called with an empty queue")
-          (car front-ptr)))
+	 (if (empty-queue?)
+	   (error "FRONT called with an empty queue")
+	   (car front-ptr)))
     (define (insert-queue! item)
-      (let ((new-pair (cons item '())))
-        (cond ((empty-queue?)
-               (set! front-ptr new-pair)
-               (set! rear-ptr new-pair))
-              (else
-               (set-cdr! rear-ptr new-pair)
-               (set! rear-ptr new-pair)))))
+	 (let ((new-pair (cons item '())))
+	   (cond ((empty-queue?)
+			(set! front-ptr new-pair)
+			(set! rear-ptr new-pair))
+		    (else
+			 (set-cdr! rear-ptr new-pair)
+			 (set! rear-ptr new-pair)))))
     (define (delete-queue!)
-      (cond ((empty-queue?)
-             (error "DELETE! called with an empty queue"))
-            (else
-             (set! front-ptr (cdr front-ptr)))))
+	 (cond ((empty-queue?)
+		   (error "DELETE! called with an empty queue"))
+		  (else
+		    (set! front-ptr (cdr front-ptr)))))
     (define (print-queue)
-      (define (print-iter l)
-        (if (not (null? l))
-          (begin (display (car l))
-                 (newline)
-                 (print-iter (cdr l)))))
-      (if (empty-queue?)
-        (display "The queue is empty.\n")
-        (print-iter front-ptr)))
+	 (define (print-iter l)
+	   (if (not (null? l))
+		(begin (display (car l))
+			  (newline)
+			  (print-iter (cdr l)))))
+	 (if (empty-queue?)
+	   (display "The queue is empty.\n")
+	   (print-iter front-ptr)))
     (define (dispatch m)
-      (cond ((eq? m 'front-ptr) front-ptr)
-            ((eq? m 'rear-ptr) rear-ptr)
-            ((eq? m 'front-queue) (front-queue))
-            ((eq? m 'empty-queue?) (empty-queue?))
-            ((eq? m 'insert-queue!) insert-queue!)
-            ((eq? m 'delete-queue!) (delete-queue!))
-            ((eq? m 'print-queue) (print-queue))
-            (else (error "Unknown request -- MAKE-QUEUE" m))))
+	 (cond ((eq? m 'front-ptr) front-ptr)
+		  ((eq? m 'rear-ptr) rear-ptr)
+		  ((eq? m 'front-queue) (front-queue))
+		  ((eq? m 'empty-queue?) (empty-queue?))
+		  ((eq? m 'insert-queue!) insert-queue!)
+		  ((eq? m 'delete-queue!) (delete-queue!))
+		  ((eq? m 'print-queue) (print-queue))
+		  (else (error "Unknown request -- MAKE-QUEUE" m))))
     dispatch))
 ; And some wrapper functions to behave exactly as before:
 (define (front-ptr q)
@@ -567,62 +567,62 @@ w
   (or (null? deque) (null? (front-ptr deque))))
 (define (front-deque deque)
   (if (empty-deque? deque)
-      (error "FRONT called with an empty deque" deque)
-      (caar deque)))
+    (error "FRONT called with an empty deque" deque)
+    (caar deque)))
 (define (rear-deque deque)
   (if (empty-deque? deque)
-      (error "REAR called with an empty deque" deque)
-      (cadr deque)))
+    (error "REAR called with an empty deque" deque)
+    (cadr deque)))
 (define (front-insert-deque! deque item)
   (cond ((empty-deque? deque)
-          (let ((new-pair (cons item (cons '() '()))))
-            (set-front-ptr! deque new-pair)
-            (set-rear-ptr! deque new-pair)
-            deque))
-        (else
-          (let ((new-pair (cons item (cons '() (front-ptr deque)))))
-            (set-car! (cdr (front-ptr deque)) new-pair)
-            (set-front-ptr! deque new-pair)
-            deque))))
+	    (let ((new-pair (cons item (cons '() '()))))
+		 (set-front-ptr! deque new-pair)
+		 (set-rear-ptr! deque new-pair)
+		 deque))
+	   (else
+		(let ((new-pair (cons item (cons '() (front-ptr deque)))))
+		  (set-car! (cdr (front-ptr deque)) new-pair)
+		  (set-front-ptr! deque new-pair)
+		  deque))))
 (define (rear-insert-deque! deque item)
   (cond ((empty-deque? deque)
-          (let ((new-pair (cons item (cons '() '()))))
-            (set-front-ptr! deque new-pair)
-            (set-rear-ptr! deque new-pair)
-            deque))
-        (else
-          (let ((new-pair (cons item (cons (rear-ptr deque) '()))))
-            (set-cdr! (cdr (rear-ptr deque)) new-pair)
-            (set-rear-ptr! deque new-pair)
-            deque))))
+	    (let ((new-pair (cons item (cons '() '()))))
+		 (set-front-ptr! deque new-pair)
+		 (set-rear-ptr! deque new-pair)
+		 deque))
+	   (else
+		(let ((new-pair (cons item (cons (rear-ptr deque) '()))))
+		  (set-cdr! (cdr (rear-ptr deque)) new-pair)
+		  (set-rear-ptr! deque new-pair)
+		  deque))))
 (define (front-delete-deque! deque)
   (cond ((empty-deque? deque)
-          (error "DELETE! called with an empty deque" deque))
-        (else
-          (if (eq? (front-ptr deque) (rear-ptr deque))
-            (begin (set-front-ptr! deque '())
-                   (set-rear-ptr! deque '())
-                   deque)
-            (begin (set-front-ptr! deque (cddr (front-ptr deque)))
-                   (set-car! (cdr (front-ptr deque)) '())
-                   deque)))))
+	    (error "DELETE! called with an empty deque" deque))
+	   (else
+		(if (eq? (front-ptr deque) (rear-ptr deque))
+		  (begin (set-front-ptr! deque '())
+			    (set-rear-ptr! deque '())
+			    deque)
+		  (begin (set-front-ptr! deque (cddr (front-ptr deque)))
+			    (set-car! (cdr (front-ptr deque)) '())
+			    deque)))))
 (define (rear-delete-deque! deque)
   (cond ((empty-deque? deque)
-          (error "DELETE! called with an empty deque" deque))
-        (else
-          (if (eq? (front-ptr deque) (rear-ptr deque))
-            (begin (set-front-ptr! deque '())
-                   (set-rear-ptr! deque '())
-                   deque)
-            (begin (set-rear-ptr! deque (cadr (rear-ptr deque)))
-                   (set-cdr! (cdr (rear-ptr deque)) '())
-                   deque)))))
+	    (error "DELETE! called with an empty deque" deque))
+	   (else
+		(if (eq? (front-ptr deque) (rear-ptr deque))
+		  (begin (set-front-ptr! deque '())
+			    (set-rear-ptr! deque '())
+			    deque)
+		  (begin (set-rear-ptr! deque (cadr (rear-ptr deque)))
+			    (set-cdr! (cdr (rear-ptr deque)) '())
+			    deque)))))
 (define (print-deque d)
   (define (print-iter l)
     (if (not (null? l))
-      (begin (display (car l))
-             (newline)
-             (print-iter (cddr l)))))
+	 (begin (display (car l))
+		   (newline)
+		   (print-iter (cddr l)))))
   (if (empty-deque? d)
     (display "The deque is empty.\n")
     (print-iter (car d))))
@@ -658,9 +658,9 @@ w
   (let ((local-table (list '*table*)))
     ; We only need to redefine assoc to account for the same-key? test
     (define (assoc key records)
-      (cond ((null? records) #f)
-            ((same-key? key (caar records)) (car records))
-            (else (assoc key (cdr records)))))
+	 (cond ((null? records) #f)
+		  ((same-key? key (caar records)) (car records))
+		  (else (assoc key (cdr records)))))
     ; -- snip -- ;
     dispatch))
 
@@ -670,28 +670,28 @@ w
   (if (not (pair? table))
     #f
     (if (null? keys)
-      (cdr table)
-      (lookup (cdr keys) (assoc (car keys) (cdr table))))))
+	 (cdr table)
+	 (lookup (cdr keys) (assoc (car keys) (cdr table))))))
 ; I now suspect that the whole SICP is a practical joke to find a way
 ; to make people write "car keys" in Scheme.
 (define (insert! keys value table)
   (if (null? keys)
     #f
     (if (null? keys)
-      (cdr table)
-      (lookup (cdr keys) (assoc (car keys) (cdr table)))))
+	 (cdr table)
+	 (lookup (cdr keys) (assoc (car keys) (cdr table)))))
   (let ((subtable (assoc key-1 (cdr table))))
     (if subtable
-        (let ((record (assoc key-2 (cdr subtable))))
-          (if record
-              (set-cdr! record value)
-              (set-cdr! subtable
-                        (cons (cons key-2 value)
-                              (cdr subtable)))))
-        (set-cdr! table
-                  (cons (list key-1
-                              (cons key-2 value))
-                        (cdr table)))))
+	 (let ((record (assoc key-2 (cdr subtable))))
+	   (if record
+		(set-cdr! record value)
+		(set-cdr! subtable
+				(cons (cons key-2 value)
+					 (cdr subtable)))))
+	 (set-cdr! table
+			 (cons (list key-1
+					   (cons key-2 value))
+				  (cdr table)))))
   'ok)
 
 
@@ -720,8 +720,8 @@ w
 ; a ∧ b ⇔ ¬(¬a ∨ ¬b)
 (define (or-gate o1 o2 output)
   (let ((b1 (make-wire))
-        (b2 (make-wire))
-        (c1 (make-wire)))
+	   (b2 (make-wire))
+	   (c1 (make-wire)))
     (inverter o1 b1)
     (inverter o2 b2)
     (and-gate b1 b2 c1)
@@ -774,10 +774,10 @@ w
     dispatch))
 (define (call-each procedures)
   (if (null? procedures)
-      'done
-      (begin
-        ((car procedures))
-        (call-each (cdr procedures)))))
+    'done
+    (begin
+	 ((car procedures))
+	 (call-each (cdr procedures)))))
 (define (get-signal wire)
   (wire 'get-signal))
 (define (set-signal! wire new-value)
@@ -786,24 +786,24 @@ w
   ((wire 'add-action!) action-procedure))
 (define (after-delay delay action)
   (add-to-agenda! (+ delay (current-time the-agenda))
-                  action
-                  the-agenda))
+			   action
+			   the-agenda))
 (define (propagate)
   (if (empty-agenda? the-agenda)
-      'done
-      (let ((first-item (first-agenda-item the-agenda)))
-        (first-item)
-        (remove-first-agenda-item! the-agenda)
-        (propagate))))
+    'done
+    (let ((first-item (first-agenda-item the-agenda)))
+	 (first-item)
+	 (remove-first-agenda-item! the-agenda)
+	 (propagate))))
 (define (probe name wire)
   (add-action! wire
-               (lambda ()        
-                 (newline)
-                 (display name)
-                 (display " ")
-                 (display (current-time the-agenda))
-                 (display "  New-value = ")
-                 (display (get-signal wire)))))
+			(lambda ()        
+			  (newline)
+			  (display name)
+			  (display " ")
+			  (display (current-time the-agenda))
+			  (display "  New-value = ")
+			  (display (get-signal wire)))))
 (define (make-time-segment time queue)
   (cons time queue))
 (define (segment-time s) (car s))
@@ -822,40 +822,40 @@ w
 (define (add-to-agenda! time action agenda)
   (define (belongs-before? segments)
     (or (null? segments)
-        (< time (segment-time (car segments)))))
+	   (< time (segment-time (car segments)))))
   (define (make-new-time-segment time action)
     (let ((q (make-queue)))
-      (insert-queue! q action)
-      (make-time-segment time q)))
+	 (insert-queue! q action)
+	 (make-time-segment time q)))
   (define (add-to-segments! segments)
     (if (= (segment-time (car segments)) time)
-        (insert-queue! (segment-queue (car segments))
-                       action)
-        (let ((rest (cdr segments)))
-          (if (belongs-before? rest)
-              (set-cdr!
-               segments
-               (cons (make-new-time-segment time action)
-                     (cdr segments)))
-              (add-to-segments! rest)))))
+	 (insert-queue! (segment-queue (car segments))
+				 action)
+	 (let ((rest (cdr segments)))
+	   (if (belongs-before? rest)
+		(set-cdr!
+		  segments
+		  (cons (make-new-time-segment time action)
+			   (cdr segments)))
+		(add-to-segments! rest)))))
   (let ((segments (segments agenda)))
     (if (belongs-before? segments)
-        (set-segments!
-         agenda
-         (cons (make-new-time-segment time action)
-               segments))
-        (add-to-segments! segments))))
+	 (set-segments!
+	   agenda
+	   (cons (make-new-time-segment time action)
+		    segments))
+	 (add-to-segments! segments))))
 (define (remove-first-agenda-item! agenda)
   (let ((q (segment-queue (first-segment agenda))))
     (delete-queue! q)
     (if (empty-queue? q)
-        (set-segments! agenda (rest-segments agenda)))))
+	 (set-segments! agenda (rest-segments agenda)))))
 (define (first-agenda-item agenda)
   (if (empty-agenda? agenda)
-      (error "Agenda is empty -- FIRST-AGENDA-ITEM")
-      (let ((first-seg (first-segment agenda)))
-        (set-current-time! agenda (segment-time first-seg))
-        (front-queue (segment-queue first-seg)))))
+    (error "Agenda is empty -- FIRST-AGENDA-ITEM")
+    (let ((first-seg (first-segment agenda)))
+	 (set-current-time! agenda (segment-time first-seg))
+	 (front-queue (segment-queue first-seg)))))
 ; And some functions from before:
 (define (half-adder a b s c)
   (let ((d (make-wire)) (e (make-wire)))
@@ -867,25 +867,25 @@ w
 (define (and-gate a1 a2 output)
   (define (and-action-procedure)
     (let ((new-value
-           (logical-and (get-signal a1) (get-signal a2))))
-      (after-delay and-gate-delay
-                   (lambda ()
-                     (set-signal! output new-value)))))
+		  (logical-and (get-signal a1) (get-signal a2))))
+	 (after-delay and-gate-delay
+			    (lambda ()
+				 (set-signal! output new-value)))))
   (add-action! a1 and-action-procedure)
   (add-action! a2 and-action-procedure)
   'ok)
 (define (inverter input output)
   (define (invert-input)
     (let ((new-value (logical-not (get-signal input))))
-      (after-delay inverter-delay
-                   (lambda ()
-                     (set-signal! output new-value)))))
+	 (after-delay inverter-delay
+			    (lambda ()
+				 (set-signal! output new-value)))))
   (add-action! input invert-input)
   'ok)
 (define (logical-not s)
   (cond ((= s 0) 1)
-        ((= s 1) 0)
-        (else (error "Invalid signal" s))))
+	   ((= s 1) 0)
+	   (else (error "Invalid signal" s))))
 ; The or-gate from 3.28 and not the one from 3.29! This is important for the
 ; delays: the or-gate we made out of and-gates and inverters will have a higher
 ; delay than a 'vanilla' or-gate
@@ -915,29 +915,29 @@ w
 (define (make-queue) (cons '() '()))
 (define (front-queue queue)
   (if (empty-queue? queue)
-      (error "FRONT called with an empty queue" queue)
-      (car (front-ptr queue))))
+    (error "FRONT called with an empty queue" queue)
+    (car (front-ptr queue))))
 (define (insert-queue! queue item)
   (let ((new-pair (cons item '())))
     (cond ((empty-queue? queue)
-           (set-front-ptr! queue new-pair)
-           (set-rear-ptr! queue new-pair)
-           queue)
-          (else
-           (set-cdr! (rear-ptr queue) new-pair)
-           (set-rear-ptr! queue new-pair)
-           queue))))
+		 (set-front-ptr! queue new-pair)
+		 (set-rear-ptr! queue new-pair)
+		 queue)
+		(else
+		  (set-cdr! (rear-ptr queue) new-pair)
+		  (set-rear-ptr! queue new-pair)
+		  queue))))
 (define (delete-queue! queue)
   (cond ((empty-queue? queue)
-         (error "DELETE! called with an empty queue" queue))
-        (else
-         (set-front-ptr! queue (cdr (front-ptr queue)))
-         queue)))
+	    (error "DELETE! called with an empty queue" queue))
+	   (else
+		(set-front-ptr! queue (cdr (front-ptr queue)))
+		queue)))
 ; And this one that we have to add ourselves because Abelson and Sussman were
 ; too lazy to write it down:
 (define (logical-and a b)
   (cond ((and (= a 1) (= b 1)) 1)
-        ((and (= a 1) (= b 0)) 0)
+	   ((and (= a 1) (= b 0)) 0)
 	   ((and (= a 0) (= b 1)) 0)
 	   ((and (= a 0) (= b 0)) 0)
 	   (else (error "Invalid signal"))))
@@ -993,24 +993,24 @@ w
 ; ways to sequentially change them to (1, 0):
 ; FIFO: (0, 1) -> (0, 0) -> (1, 0)
 ; LIFO: (0, 1) -> (1, 1) -> (1, 0)
-; The second way will have the output flicker from 0 to 1, whcih we don't want.
+; The second way will have the output flicker from 0 to 1, which we don't want.
 
 ;-- 3.33
 ; Given:
 (define (adder a1 a2 sum)
   (define (process-new-value)
     (cond ((and (has-value? a1) (has-value? a2))
-           (set-value! sum
-                       (+ (get-value a1) (get-value a2))
-                       me))
-          ((and (has-value? a1) (has-value? sum))
-           (set-value! a2
-                       (- (get-value sum) (get-value a1))
-                       me))
-          ((and (has-value? a2) (has-value? sum))
-           (set-value! a1
-                       (- (get-value sum) (get-value a2))
-                       me))))
+		 (set-value! sum
+				   (+ (get-value a1) (get-value a2))
+				   me))
+		((and (has-value? a1) (has-value? sum))
+		 (set-value! a2
+				   (- (get-value sum) (get-value a1))
+				   me))
+		((and (has-value? a2) (has-value? sum))
+		 (set-value! a1
+				   (- (get-value sum) (get-value a2))
+				   me))))
   (define (process-forget-value)
     (forget-value! sum me)
     (forget-value! a1 me)
@@ -1018,11 +1018,11 @@ w
     (process-new-value))
   (define (me request)
     (cond ((eq? request 'I-have-a-value)  
-           (process-new-value))
-          ((eq? request 'I-lost-my-value) 
-           (process-forget-value))
-          (else 
-           (error "Unknown request -- ADDER" request))))
+		 (process-new-value))
+		((eq? request 'I-lost-my-value) 
+		 (process-forget-value))
+		(else 
+		  (error "Unknown request -- ADDER" request))))
   (connect a1 me)
   (connect a2 me)
   (connect sum me)
@@ -1034,20 +1034,20 @@ w
 (define (multiplier m1 m2 product)
   (define (process-new-value)
     (cond ((or (and (has-value? m1) (= (get-value m1) 0))
-               (and (has-value? m2) (= (get-value m2) 0)))
-           (set-value! product 0 me))
-          ((and (has-value? m1) (has-value? m2))
-           (set-value! product
-                       (* (get-value m1) (get-value m2))
-                       me))
-          ((and (has-value? product) (has-value? m1))
-           (set-value! m2
-                       (/ (get-value product) (get-value m1))
-                       me))
-          ((and (has-value? product) (has-value? m2))
-           (set-value! m1
-                       (/ (get-value product) (get-value m2))
-                       me))))
+			(and (has-value? m2) (= (get-value m2) 0)))
+		 (set-value! product 0 me))
+		((and (has-value? m1) (has-value? m2))
+		 (set-value! product
+				   (* (get-value m1) (get-value m2))
+				   me))
+		((and (has-value? product) (has-value? m1))
+		 (set-value! m2
+				   (/ (get-value product) (get-value m1))
+				   me))
+		((and (has-value? product) (has-value? m2))
+		 (set-value! m1
+				   (/ (get-value product) (get-value m2))
+				   me))))
   (define (process-forget-value)
     (forget-value! product me)
     (forget-value! m1 me)
@@ -1055,11 +1055,11 @@ w
     (process-new-value))
   (define (me request)
     (cond ((eq? request 'I-have-a-value)
-           (process-new-value))
-          ((eq? request 'I-lost-my-value)
-           (process-forget-value))
-          (else
-           (error "Unknown request -- MULTIPLIER" request))))
+		 (process-new-value))
+		((eq? request 'I-lost-my-value)
+		 (process-forget-value))
+		(else
+		  (error "Unknown request -- MULTIPLIER" request))))
   (connect m1 me)
   (connect m2 me)
   (connect product me)
@@ -1083,55 +1083,55 @@ w
     (print-probe "?"))
   (define (me request)
     (cond ((eq? request 'I-have-a-value)
-           (process-new-value))
-          ((eq? request 'I-lost-my-value)
-           (process-forget-value))
-          (else
-           (error "Unknown request -- PROBE" request))))
+		 (process-new-value))
+		((eq? request 'I-lost-my-value)
+		 (process-forget-value))
+		(else
+		  (error "Unknown request -- PROBE" request))))
   (connect connector me)
   me)
 (define (make-connector)
   (let ((value #f) (informant #f) (constraints '()))
     (define (set-my-value newval setter)
-      (cond ((not (has-value? me))
-             (set! value newval)
-             (set! informant setter)
-             (for-each-except setter
-                              inform-about-value
-                              constraints))
-            ((not (= value newval))
-             (error "Contradiction" (list value newval)))
-            (else 'ignored)))
+	 (cond ((not (has-value? me))
+		   (set! value newval)
+		   (set! informant setter)
+		   (for-each-except setter
+						inform-about-value
+						constraints))
+		  ((not (= value newval))
+		   (error "Contradiction" (list value newval)))
+		  (else 'ignored)))
     (define (forget-my-value retractor)
-      (if (eq? retractor informant)
-          (begin (set! informant #f)
-                 (for-each-except retractor
-                                  inform-about-no-value
-                                  constraints))
-          'ignored))
+	 (if (eq? retractor informant)
+	   (begin (set! informant #f)
+			(for-each-except retractor
+						  inform-about-no-value
+						  constraints))
+	   'ignored))
     (define (connect new-constraint)
-      (if (not (memq new-constraint constraints))
-          (set! constraints 
-                (cons new-constraint constraints)))
-      (if (has-value? me)
-          (inform-about-value new-constraint))
-      'done)
+	 (if (not (memq new-constraint constraints))
+	   (set! constraints 
+		(cons new-constraint constraints)))
+	 (if (has-value? me)
+	   (inform-about-value new-constraint))
+	 'done)
     (define (me request)
-      (cond ((eq? request 'has-value?)
-             (if informant #t #f))
-            ((eq? request 'value) value)
-            ((eq? request 'set-value!) set-my-value)
-            ((eq? request 'forget) forget-my-value)
-            ((eq? request 'connect) connect)
-            (else (error "Unknown operation -- CONNECTOR"
-                         request))))
+	 (cond ((eq? request 'has-value?)
+		   (if informant #t #f))
+		  ((eq? request 'value) value)
+		  ((eq? request 'set-value!) set-my-value)
+		  ((eq? request 'forget) forget-my-value)
+		  ((eq? request 'connect) connect)
+		  (else (error "Unknown operation -- CONNECTOR"
+					request))))
     me))
 (define (for-each-except exception procedure list)
   (define (loop items)
     (cond ((null? items) 'done)
-          ((eq? (car items) exception) (loop (cdr items)))
-          (else (procedure (car items))
-                (loop (cdr items)))))
+		((eq? (car items) exception) (loop (cdr items)))
+		(else (procedure (car items))
+			 (loop (cdr items)))))
   (loop list))
 (define (has-value? connector)
   (connector 'has-value?))
@@ -1262,22 +1262,22 @@ w
   (let ((z (make-connector)))
     (constant x z)
     z))
-; We will need to define substracter and diviser if we want to implement c- and
+; We will need to define subtracter and divider if we want to implement c- and
 ; c/.
-(define (substracter a1 a2 sum)
+(define (subtracter a1 a2 sum)
   (define (process-new-value)
     (cond ((and (has-value? a1) (has-value? a2))
-           (set-value! sum
-                       (- (get-value a1) (get-value a2))
-                       me))
-          ((and (has-value? a1) (has-value? sum))
-           (set-value! a2
-                       (- (get-value a1) (get-value sum))
-                       me))
-          ((and (has-value? a2) (has-value? sum))
-           (set-value! a1
-                       (+ (get-value sum) (get-value a2))
-                       me))))
+		 (set-value! sum
+				   (- (get-value a1) (get-value a2))
+				   me))
+		((and (has-value? a1) (has-value? sum))
+		 (set-value! a2
+				   (- (get-value a1) (get-value sum))
+				   me))
+		((and (has-value? a2) (has-value? sum))
+		 (set-value! a1
+				   (+ (get-value sum) (get-value a2))
+				   me))))
   (define (process-forget-value)
     (forget-value! sum me)
     (forget-value! a1 me)
@@ -1285,11 +1285,11 @@ w
     (process-new-value))
   (define (me request)
     (cond ((eq? request 'I-have-a-value)  
-           (process-new-value))
-          ((eq? request 'I-lost-my-value) 
-           (process-forget-value))
-          (else 
-           (error "Unknown request -- SUBSTRACTER" request))))
+		 (process-new-value))
+		((eq? request 'I-lost-my-value) 
+		 (process-forget-value))
+		(else 
+		  (error "Unknown request -- SUBTRACTER" request))))
   (connect a1 me)
   (connect a2 me)
   (connect sum me)
@@ -1297,20 +1297,20 @@ w
 (define (divider m1 m2 product)
   (define (process-new-value)
     (cond ((or (and (has-value? m1) (= (get-value m1) 0))
-               (and (has-value? m2) (= (get-value m2) 0)))
-           (set-value! product 0 me))
-          ((and (has-value? m1) (has-value? m2))
-           (set-value! product
-                       (/ (get-value m1) (get-value m2))
-                       me))
-          ((and (has-value? product) (has-value? m1))
-           (set-value! m2
-                       (/ (get-value m1) (get-value product))
-                       me))
-          ((and (has-value? product) (has-value? m2))
-           (set-value! m1
-                       (* (get-value product) (get-value m2))
-                       me))))
+			(and (has-value? m2) (= (get-value m2) 0)))
+		 (set-value! product 0 me))
+		((and (has-value? m1) (has-value? m2))
+		 (set-value! product
+				   (/ (get-value m1) (get-value m2))
+				   me))
+		((and (has-value? product) (has-value? m1))
+		 (set-value! m2
+				   (/ (get-value m1) (get-value product))
+				   me))
+		((and (has-value? product) (has-value? m2))
+		 (set-value! m1
+				   (* (get-value product) (get-value m2))
+				   me))))
   (define (process-forget-value)
     (forget-value! product me)
     (forget-value! m1 me)
@@ -1318,11 +1318,11 @@ w
     (process-new-value))
   (define (me request)
     (cond ((eq? request 'I-have-a-value)
-           (process-new-value))
-          ((eq? request 'I-lost-my-value)
-           (process-forget-value))
-          (else
-           (error "Unknown request -- DIVIDER" request))))
+		 (process-new-value))
+		((eq? request 'I-lost-my-value)
+		 (process-forget-value))
+		(else
+		  (error "Unknown request -- DIVIDER" request))))
   (connect m1 me)
   (connect m2 me)
   (connect product me)
@@ -1330,7 +1330,7 @@ w
 
 (define (c- x y)
   (let ((z (make-connector)))
-    (substracter x y z)
+    (subtracter x y z)
     z))
 (define (c/ x y)
   (let ((z (make-connector)))
@@ -1340,8 +1340,8 @@ w
 ; Test:
 (define (celsius-fahrenheit-converter x)
   (c+ (c* (c/ (cv 9) (cv 5))
-          x)
-      (cv 32)))
+		x)
+	 (cv 32)))
 (define C (make-connector))
 (define F (celsius-fahrenheit-converter C))
 (probe "Celsius" C)
@@ -1450,18 +1450,18 @@ w
 (define (make-mutex)
   (let ((cell (list false)))            
     (define (the-mutex m)
-      (cond ((eq? m 'acquire)
-             (if (test-and-set! cell)
-                 (the-mutex 'acquire))) ; retry
-            ((eq? m 'release) (clear! cell))))
+	 (cond ((eq? m 'acquire)
+		   (if (test-and-set! cell)
+			(the-mutex 'acquire))) ; retry
+		  ((eq? m 'release) (clear! cell))))
     the-mutex))
 (define (clear! cell)
   (set-car! cell #f))
 (define (test-and-set! cell)
   (if (car cell)
-      #t
-      (begin (set-car! cell #t)
-             #f)))
+    #t
+    (begin (set-car! cell #t)
+		 #f)))
 ; a.
 (define (make-mutex-list n)
   (if (= n 0) ; we assume n >= 0
@@ -1631,4 +1631,100 @@ w
 ;-- 3.49
 ; Well, this is pretty self-explanatory. If a lookup is involved, a process has
 ; no way of knowing which mutex to acquire first; hence a risk of deadlock.
+
+;-- 3.50
+(define (stream-map proc . argstreams)
+  (if (stream-null? (car argstreams))
+    the-empty-stream
+    (cons-stream
+	 (apply proc (map stream-car argstreams))
+	 (apply stream-map
+		   (cons proc (map stream-cdr argstreams))))))
+
+; This is easier to grasp if you understand what we want to achieve with
+; stream-map: a new stream, composed of the successive results of (proc)
+; applied to the elements of the streams.
+; Something like:
+; (stream (proc (car stream1) (car stream2) (car stream3) ...)
+;         (proc (cadr stream1) (cadr stream2) (cadr stream3) ...)
+;         (proc (caddr stream1) (caddr stream2) (caddr stream3) ...)
+;         (...))
+
+;-- 3.51
+; (stream-ref x 5) will print the numbers up to 5, because they've never been
+; computed before.
+; In contrast, (stream-ref x 7) will only print 6 and 7. The results of (show)
+; from 0 to 5 have already been computed, and stream-ref will only look up the
+; result instead of re-executing the function (which would print them).
+
+;-- 3.52
+; Q: What is the value of sum after each of the above expressions is evaluated?
+(define sum 0)
+; 0 (pretty straightforward so far.)
+(define (accum x)
+  (set! sum (+ x sum))
+  sum)
+; 0
+(define seq (stream-map accum (stream-enumerate-interval 1 20)))
+; 1: our streams are lazy, but the first value is computed
+(define y (stream-filter even? seq))
+; 6: same for the filters, first value is computed
+(define z (stream-filter (lambda (x) (= (remainder x 5) 0))
+					seq))
+; 10
+(stream-ref y 7)
+; y is a stream comprised of the even numbers in our first stream.
+; What will be computed here in seq will be the following:
+;  Order  |  seq (i.e. value of sum)	|	  function call
+; 1		| 1  (filtered out)			|
+; 2		| 3  (filtered out)			|	(stream-ref (6..) 7)
+; 3		| 6  (accepted in y)		|	(stream-ref (10..) 6)
+; 4		| 10 (accepted in y)		|
+; 5		| 15 (filtered out)			|
+; 6		| 21 (filtered out)			|	(stream-ref (28..) 5)
+; 7		| 28 (accepted in y)		|	(stream-ref (36..) 4)
+; 8		| 36 (accepted in y)		|
+; 9		| 45 (filtered out)			|
+; 10		| 55 (filtered out)			|	(stream-ref (66..) 3)
+; 11		| 66 (accepted in y)		|	(stream-ref (78..) 2)
+; 12		| 78 (accepted in y)		|
+; 13		| 91 (filtered out)			|
+; 14		| 105 (filtered out)		|	(stream-ref (120..) 1)
+; 15		| 120 (accepted in y)		|	(stream-ref (136..) 0)
+; 16		| 136 (accepted in y)		|
+
+(display-stream z)
+; All of seq will be consummated here; which up to 20 gives:
+; Order	|  seq (i.e. value of sum)
+; 17		| 153
+; 18		| 171
+; 19		| 190
+; 20		| 210
+
+; Q: What is the printed response to evaluating the stream-ref and
+; display-stream expressions?
+; stream-ref will print 136
+; display-stream will print 10, 15, 45, 55, 105, 120, 190, 210
+
+; Q: Would these responses differ if we had implemented (delay <exp>) simply as
+; (lambda () <exp>) without using the optimization provided by memo-proc ?
+; Yes. Memoization is what makes that sum doesn't grow when the results have
+; already been computed. If we re-computed the value each time, we would have
+; the following values for sum instead:
+(define seq (stream-map accum (stream-enumerate-interval 1 20)))
+; 1
+(define y (stream-filter even? seq))
+; 7
+(define z (stream-filter (lambda (x) (= (remainder x 5) 0))
+					seq))
+; 17
+(stream-ref y 7)
+; 153
+(display-stream z)
+; 363
+
+; NB: it me a good hour to get all of that right *and* understand it.
+; Now my brains hurt.
+
+;-- 3.53
 
