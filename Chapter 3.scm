@@ -1431,5 +1431,204 @@ w
 ; does not need to be serialized further. Incidentally, a safe money exchange
 ; would be two serialized money transfers.
 
+;-- 3.45
+; If we use Louis' method, serialized-exchange will try to serialize the calls
+; to the methods of the two accounts, but the fact that these calls are already
+; serialized will break our serialized-exchange. The system will try to
+; serialize the function call with itself, meaning a deadlock.
 
+;-- 3.46
+; (This will be a text-based diagram, bear with me here.)
+; - Process 1 reads the value of the cell: false. Pause.
+; - Process 2 reads the value of the cell: false. Pause.
+; - Process 1 sets the value of the cell to true, consider mutex acquired.
+; - Process 2 sets the value of the cell to true, consider mutex acquired.
+; - Chaos ensue.
+
+;-- 3.47
+; Given:
+(define (make-mutex)
+  (let ((cell (list false)))            
+    (define (the-mutex m)
+      (cond ((eq? m 'acquire)
+             (if (test-and-set! cell)
+                 (the-mutex 'acquire))) ; retry
+            ((eq? m 'release) (clear! cell))))
+    the-mutex))
+(define (clear! cell)
+  (set-car! cell #f))
+(define (test-and-set! cell)
+  (if (car cell)
+      #t
+      (begin (set-car! cell #t)
+             #f)))
+; a.
+(define (make-mutex-list n)
+  (if (= n 0) ; we assume n >= 0
+    '()
+    (cons (make-mutex)
+		(make-mutex-list (- n 1)))))
+(define (acquire-nth-mutex mutex-list n)
+  (if (= n 1)
+    ((car mutex-list) 'acquire)
+    (acquire-nth-mutex (cdr mutex-list) (- n 1))))
+(define (release-nth-mutex mutex-list n)
+  (if (= n 1)
+    ((car mutex-list) 'release)
+    (release-nth-mutex (cdr mutex-list) (- n 1))))
+; We will use a list as a stack of mutexes
+(define (make-semaphore n)
+  (let ((counter 1)
+	   (mutex-list (make-mutex-list n)))
+    (define (the-semaphore m)
+	 (cond ((eq? m 'acquire)
+		   (if (= n counter)
+			(the-semaphore 'acquire) ; wait for a free mutex
+			(acquire-nth-mutex mutex-list counter))
+		   (set! counter (+ counter 1)))
+		  ((eq? m 'release)
+		   (release-nth-mutex mutex-list counter)
+		   (set! counter (- counter 1)))))
+    the-semaphore))
+
+; After looking at some other people's code, my solution is a pretty bad
+; solution.
+; Upon reflection, it is also completely incorrect: the counter isn't protected
+; by a mutex, which means its value can get out of sync. The whole purpose of
+; the semaphore is then defeated.
+
+; A simpler (and better) solution would be to use a counter and an unique mutex
+; to change it, e.g.:
+(define (make-semaphore n)
+  (let ((mutex (make-mutex))
+	   (counter 0))
+    (define (the-semaphore m)
+	 (cond ((eq? m 'acquire)
+		   (mutex 'acquire)
+		   (cond ((= n counter)
+				(mutex 'release)
+				(the-semaphore 'acquire)) ; wait
+			    (else
+				 (set! counter (+ 1 counter))
+				 (mutex 'release))))
+		  ((eq? m 'release)
+		   (mutex 'acquire)
+		   (if (not (= 0 counter))
+			(set! counter (- counter 1)))
+		   (mutex 'release))))
+    the-semaphore))
+
+; b. would be the same, except we'd do the mutex code ourselves.
+
+;-- 3.48
+; Having an account number means the two mutexes will always be acquired in the
+; same order, which means if one of the mutex is acquired, another process
+; attempting to exchange the two accounts will not try to acquire the other
+; mutex first.
+
+; Given:
+(define (make-mutex)
+  (let ((cell (list #f)))            
+    (define (the-mutex m)
+	 (cond ((eq? m 'acquire)
+		   (if (test-and-set! cell)
+			(the-mutex 'acquire))) ; retry
+		  ((eq? m 'release) (clear! cell))))
+    the-mutex))
+(define (test-and-set! cell)
+  (if (car cell)
+    #t
+    (begin (set-car! cell #t)
+		 #f)))
+(define (clear! cell)
+  (set-car! cell #f))
+(define (make-serializer)
+  (let ((mutex (make-mutex)))
+    (lambda (p)
+	 (define (serialized-p . args)
+	   (mutex 'acquire)
+	   (let ((val (apply p args)))
+		(mutex 'release)
+		val))
+	 serialized-p)))
+(define (exchange account1 account2)
+  (let ((difference (- (account1 'balance)
+				   (account2 'balance))))
+    ((account1 'withdraw) difference)
+    ((account2 'deposit) difference)))
+; Implementation:
+; First, let's create a function that will return a unique account-number. The
+; trick is to protect this counter with a mutex:
+(define new-account-number
+  (let ((mutex (make-mutex))
+	   (account-number 0))
+    (define (func)
+	 (mutex 'acquire)
+	 (set! account-number (+ account-number 1))
+	 (let ((newly-created-account-number account-number))
+	   (mutex 'release)
+	   newly-created-account-number))
+    func))
+; Now let's add the relevant code into make-account:
+(define (make-account balance)
+  (define (withdraw amount)
+    (if (>= balance amount)
+	 (begin (set! balance (- balance amount))
+		   balance)
+	 "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (let ((balance-serializer (make-serializer))
+	   (number (new-account-number)))
+    (define (dispatch m)
+	 (cond ((eq? m 'withdraw) withdraw)
+		  ((eq? m 'deposit) deposit)
+		  ((eq? m 'balance) balance)
+		  ((eq? m 'number) number)
+		  ((eq? m 'serializer) balance-serializer)
+		  (else (error "Unknown request -- MAKE-ACCOUNT"
+					m))))
+    dispatch))
+; And into serialized-exchange:
+(define (serialized-exchange account1 account2)
+  (let ((serializer1 (account1 'serializer))
+	   (serializer2 (account2 'serializer))
+	   (number1 (account1 'number))
+	   (number2 (account2 'number)))
+    ((if (= (min number1 number2) number1)
+	  (serializer2 (serializer1 exchange))
+	  (serializer1 (serializer2 exchange)))
+	account1
+	account2)))
+
+; Test:
+(new-account-number)
+; 1
+(new-account-number)
+; 2
+; Works as planned!
+(define g (make-account 34)) 
+(g 'balance)
+; 34
+(g 'number)
+; 3
+; Looks good.
+(define k (make-account 21))
+(k 'balance)
+; 21
+(k 'number)
+; 4
+(serialized-exchange g k)
+(g 'balance)
+; 21
+(k 'balance)
+; 34
+; Still works as planned. I don't know how to simulate concurrent access to the
+; accounts so I'll leave it at that, but if anyone has an idea, it would be
+; much welcome.
+
+;-- 3.49
+; Well, this is pretty self-explanatory. If a lookup is involved, a process has
+; no way of knowing which mutex to acquire first; hence a risk of deadlock.
 
