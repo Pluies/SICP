@@ -1727,4 +1727,258 @@ w
 ; Now my brains hurt.
 
 ;-- 3.53
+; Without running the program, describe the elements of the stream defined by
+(define s (cons-stream 1 (add-streams s s)))
+; This program describes the powers of 2, starting at 2^0 = 1.
+
+;-- 3.54
+(define (mul-streams s1 s2)
+  (stream-map * s1 s2))
+
+(define factorials
+  (cons-stream 1 (mul-streams factorials integers)))
+
+;-- 3.55
+; We need something like scale-stream, but with addition instead of
+; multiplication:
+(define (add-to-stream stream n)
+  (stream-map (lambda (x) (+ x n)) stream))
+(define (partial-sums stream)
+  (cons-stream (car stream)
+			(add-to-stream (cdr-stream) (car stream))))
+
+;-- 3.56
+(define S
+  (cons-stream 1 (merge (scale-stream S 5)
+				    (merge (scale-stream S 2)
+						 (scale-stream S 3)))))
+
+;-- 3.57
+; Given:
+(define (stream-map proc s)
+  (if (stream-null? s)
+    the-empty-stream
+    (cons-stream (proc (stream-car s))
+			  (stream-map proc (stream-cdr s)))))
+(define (add-streams s1 s2)
+  (stream-map + s1 s2))
+(define fibs
+  (cons-stream 0
+			(cons-stream 1
+					   (add-streams (stream-cdr fibs)
+								 fibs))))
+; Q:How many additions are performed when we compute the nth Fibonacci number
+; using the definition of fibs based on the add-streams procedure?
+
+; Say we compute:
+(fibs 6)
+; What will be called:
+(fibs 0)	; <- already known	0 addition
+(fibs 1)	; <- already known	0 addition
+(fibs 2)	; <- 0 + 1		1 addition
+(fibs 3)	; <- 1 + 1		1 addition
+(fibs 4)	; <- 1 + 2		1 addition
+(fibs 5)	; <- 2 + 3		1 addition
+(fibs 6)	; <- 3 + 5		1 addition
+; (fibs) only need one addition per new step, because the results from the
+; previous steps are memoized.
+
+; Had we implemented streams with a simple lambda, the result would have been:
+(fibs 0)	; <- already known						0 addition
+(fibs 1)	; <- already known						0 addition
+(fibs 2)	; <- 0 + 1							1 addition
+(fibs 3)	; <- 1 + (0 + 1)						2 additions
+(fibs 4)	; <- (0 + 1) + (1 + (0 + 1))				4 additions
+(fibs 5)	; <- (1 + (0 + 1))
+		;	+ ((0 + 1) + (1 + (0 + 1)))			7 additions
+(fibs 6)	; <- ((0 + 1) + (1 + (0 + 1)))
+		;	+ ((1 + (0 + 1))
+		;	   + ((0 + 1) + (1 + (0 + 1))))		12 additions
+
+; i.e. exponentially greater. The number of additions needed seem to follow a
+; strange pattern of... An = (A(n-1) + A(n-2)) + 1
+
+;-- 3.58
+; Q:Give an interpretation of the stream computed by the following procedure:
+(define (expand num den radix)
+  (cons-stream
+    (quotient (* num radix) den)
+    (expand (remainder (* num radix) den) den radix)))
+; The long division of num(erator) by den(ominator), in base radix.
+
+;-- 3.59 to 3.62
+; These power series are a bit too math-y to my taste.
+
+;-- 3.63
+; Alyssa's answer and the rest of the question seem to hint that memo-proc can
+; optimize guesses. Indeed, if we only recurse through sqrt-stream, the guesses
+; won't be memoized and will be recomputed every time.
+
+;-- 3.64
+(define (stream-limit stream tolerance)
+  (letrec ((first-item (stream-car stream))
+		 (second-item (stream-car (stream-cdr stream)))
+		 (difference (- second-item first-item)))
+    (if (< difference tolerance)
+	 second-item
+	 (stream-limit (cdr stream) tolerance))))
+
+;-- 3.65
+(define (ln-summands n)
+  (cons-stream (/ 1.0 n)
+			(stream-map (** -1 n)
+					  (ln-summands (+ n 1)))))
+(define ln-stream
+  (partial-sums (ln-summands 1)))
+(display-stream ln-stream)
+
+;-- 3.66
+; (1,1) (1,2) (2,2) (1,3) (2,3) (3,3) (1,4)...
+; Q: how many pairs precede the pair (1,100)?
+; 4950
+; Q: the pair (99,100)?
+; 5048
+; Q: the pair (100,100)?
+; 5049
+
+; After looking at other people's solutions on the internet, looks like I'm
+; quite wrong on that.
+
+;-- 3.67
+; Modify the pairs procedure so that (pairs integers integers) will produce the
+; stream of all pairs of integers (i,j) (without the condition i < j)
+(define (pairs s t)
+  (cons-stream
+    (list (stream-car s) (stream-car t))
+    (interleave
+	 (stream-map (lambda (x) (list (stream-car s) x))
+			   (stream-cdr t))
+	 (interleave (pairs (stream-cdr s) (stream-cdr t))
+			   (stream-map (lambda (x) (list (stream-car t) x))
+						(stream-cdr s))))))
+
+;-- 3.68
+; No, this won't work: interleave will try to evaluate the first element of s2
+; in order to put it into its cons-stream, but this calls pairs again, leading
+; to an endless loop.
+
+;-- 3.69
+(define (triples a b c)
+  (pairs a (pairs b c)))
+; Sounds cool, right? Well it doesn't work. :/
+; It will create triplets that look like (1 (1 1)) instead of the (1 1 1) we
+; want.
+; This is better:
+(define (triples a b c)
+  (cons-stream
+    (list (stream-car a) (stream-car b) (stream-car c))
+    (interleave
+	 (stream-map (lambda (x) (append (list (stream-car a)) x))
+			   (stream-cdr (pairs b c)))
+	 (triples (stream-cdr a) (stream-cdr b) (stream-cdr c)))))
+
+(define pythagorean-triples
+  (filter-stream (lambda (x)
+			    (let ((i (car x))
+					(j (cadr x))
+					(k (caddr x)))
+				 (= (+ (expt i 2)
+					  (expt j 2))
+				    (expt k 2))))
+			  (triples integer integer integer)))
+
+;-- 3.70
+(define (merge-weighted s1 s2 weight)
+  (cond ((stream-null? s1) s2)
+	   ((stream-null? s2) s1)
+	   (else
+		(letrec ((s1car (stream-car s1))
+			    (s2car (stream-car s2))
+			    (w1 (weight s1))
+			    (w2 (weight s2)))
+		  (if (<= w1 w2)
+		    (cons-stream s1car (merge-weighted (stream-cdr s1)
+									    s2
+									    weight))
+		    (cons-stream s2car (merge-weighted s1
+									    (stream-cdr s2)
+									    weight)))))))
+(define (weighted-pairs s t weight)
+  (cons-stream
+    (list (stream-car s) (stream-car t))
+    (merge-weighted
+	 (stream-map (lambda (x) (list (stream-car s) x))
+			   (stream-cdr t))
+	 (weighted-pairs (stream-cdr s) (stream-cdr t) weight))))
+
+; a.
+(define a
+  (weighted-pairs integers
+			   integers
+			   (lambda (x) (+ (car x) (cadr x)))))
+
+; b.
+(define ints-for-b
+  (filter-stream integers
+			  (lambda (x)
+			    (and (not (= (modulo x 2) 0))
+				    (not (= (modulo x 3) 0))
+				    (not (= (modulo x 5) 0))))))
+(define b
+  (weighted-pairs ints-for-b
+			   ints-for-b
+			   (lambda (x)
+				(let ((i (car x))
+					 (j (cadr x)))
+				  (+ (* 2 i)
+					(* 3 j)
+					(* 5 i j))))))
+
+;-- 3.71
+(define (ramanujan-weight pair)
+  (+ (expt (car  pair) 3)
+	(expt (cadr pair) 3)))
+(define ijcube
+  (weighted-pairs integers
+			   integers
+			   ramanujan-weight))
+(define (ramanujan stream n)
+  (letrec ((p1 (stream-car  stream))
+		 (p2 (stream-cadr stream))
+		 (w1 (ramanujan-weight p1))
+		 (w2 (ramanujan-weight p2)))
+    (if (= w1 w2)
+	 (begin (display (list w1 (list p1 p2)))
+		   (newline)
+		   (ramanujan (stream-cdr stream) (- n 1)))
+	 (ramanujan (stream-cdr stream) n))))
+
+(ramanujan ijcube 5)
+
+;-- 3.72
+(define (stream-caddr s)
+  (stream-cadr (stream-cdr s)))
+(define (sum-of-squares pair)
+  (+ (expt (car  pair) 2)
+	(expt (cadr pair) 2)))
+(define pairs-372
+  (weighted-pairs integers
+			   integers
+			   sum-of-squares))
+(define (answer-372 stream n)
+  (letrec ((p1 (stream-car   stream))
+		 (p2 (stream-cadr  stream))
+		 (p3 (stream-caddr stream))
+		 (w1 (sum-of-squares p1))
+		 (w2 (sum-of-squares p2))
+		 (w3 (sum-of-squares p3)))
+    (if (= w1 w2 w3)
+	 (begin (display (list w1 (list p1 p2 p3)))
+		   (newline)
+		   (answer-372 (stream-cdr stream) (- n 1)))
+	 (answer-372 (stream-cdr stream) n))))
+
+(answer-372 pairs-372 10)
+
+;-- 3.73
 
