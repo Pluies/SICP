@@ -541,7 +541,7 @@
 							 ; same line.
   (= (cdr queen-a) (cdr queen-b)))
 (define (same-diagonal queen-a queen-b) ; Two queens are on the same diagonal
-  								; if there horizontal distance is equal
+  								; if their horizontal distance is equal
 								; to their vertical distance
   (= (- (car queen-a) (car queen-b))
      (abs (- (cdr queen-a) (cdr queen-b)))))
