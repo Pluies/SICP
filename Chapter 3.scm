@@ -1981,4 +1981,39 @@ w
 (answer-372 pairs-372 10)
 
 ;-- 3.73
+; (Use the integral from 3.5x)
+
+;-- 3.74
+(define zero-crossings
+  (stream-map sign-change-detector sense-data (stream-cdr sense-data)))
+
+;-- 3.75
+(define (make-zero-crossings input-stream last-value)
+  (let ((avpt (/ (+ (stream-car input-stream) last-value) 2)))
+    (cons-stream (sign-change-detector avpt last-value)
+                 (make-zero-crossings (stream-cdr input-stream)
+                                      avpt))))
+; This program doesn't average two consecutive values from the input stream,
+; but a value to the previously computed average (here called avpt).
+; Correct version:
+(define (make-zero-crossings input-stream last-value last-avpt)
+  (letrec ((current-value (stream-car input-stream))
+           (current-avpt (/ (+ current-value last-value) 2)))
+    (cons-stream (sign-change-detector current-avpt last-avpt)
+                 (make-zero-crossings (stream-cdr input-stream)
+                                      current-value
+                                      current-avpt))))
+
+;-- 3.76
+(define (smooth input-stream)
+  (stream-cons (/ (+ (stream-car input-stream)
+                     (stream-cadr input-stream))
+                  2)
+               (smooth (stream-cdr input-stream))))
+(define zero-crossings
+  (let ((data (smooth sense-data)))
+    (stream-map sign-change-detector data (stream-cdr data))))
+
+;-- 3.77
+
 
