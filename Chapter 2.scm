@@ -6,13 +6,13 @@
 (define (make-rat n d)
   (let ((g (gcd n d)))
     (cons (/ (if (or (and (< n 0) (< d 0)) (and (> n 0) (< d 0)))
-	       (- n)
-	       n)
-	     g)
-	  (/ (if (or (and (< n 0) (< d 0)) (and (> n 0) (< d 0)))
-	       (- d)
-	       d)
-	     g))))
+               (- n)
+               n)
+             g)
+          (/ (if (or (and (< n 0) (< d 0)) (and (> n 0) (< d 0)))
+               (- d)
+               d)
+             g))))
 
 ; Clever version, from http://community.schemewiki.org/?sicp-ex-2.1
 (define (make-rat n d)
@@ -31,9 +31,9 @@
 (define (average x y) (/ (+ x y) 2))
 (define (midpoint-segment s)
   (make-point (average (x-point (start-segment s))
-		       (x-point (end-segment s)))
-	      (average (y-point (start-segment s))
-		       (y-point (end-segment s)))))
+                       (x-point (end-segment s)))
+              (average (y-point (start-segment s))
+                       (y-point (end-segment s)))))
 
 ; Given:
 (define (print-point p)
@@ -46,7 +46,7 @@
 
 ;-- 2.3
 (define (rectangle a b c d) ; Where a, b, c and d are (x,y) pairs representing
-  					   ; points coordinates as : a   b
+  ; points coordinates as : a   b
   (cons (cons a b) (cons c d)))                     ; d   c
 (define (point_a r) (car (car r)))
 (define (point_b r) (cdr (car r)))
@@ -54,7 +54,7 @@
 (define (point_d r) (cdr (cdr r)))
 (define (distance a b)
   (sqrt (+ (square (- (x-point b) (x-point a)))
-	   (square (- (y-point b) (y-point a))))))
+           (square (- (y-point b) (y-point a))))))
 (define (width r)
   (distance (point_a r) (point_b r)))
 (define (height r)
@@ -107,7 +107,7 @@
   (if (null? (cdr alist))
     alist
     (append (reverse (cdr alist))
-	    (list (car alist)))))
+            (list (car alist)))))
 
 ; Test:
 (reverse (list 1 2 3 4)) 
@@ -121,12 +121,12 @@
   (null? coin-values))
 (define (cc amount coin-values)
   (cond ((= amount 0) 1)((or (< amount 0) (no-more? coin-values)) 0)
-	(else
-	  (+ (cc amount
-		 (except-first-denomination coin-values))
-	     (cc (- amount
-		    (first-denomination coin-values))
-		 coin-values)))))
+        (else
+          (+ (cc amount
+                 (except-first-denomination coin-values))
+             (cc (- amount
+                    (first-denomination coin-values))
+                 coin-values)))))
 
 ;-- 2.20
 (define (same-parity . numberlist)
@@ -134,8 +134,8 @@
     (if (null? li)
       li
       (if (condition (car li))
-	(append (list (car li)) (filter (cdr li) condition))
-	(filter (cdr li) condition))))
+        (append (list (car li)) (filter (cdr li) condition))
+        (filter (cdr li) condition))))
   (if (even? (car numberlist))
     (filter numberlist even?)
     (filter numberlist (lambda (x) (not (even? x))))))
@@ -145,7 +145,7 @@
   (if (null? items)
     nil
     (cons (* (car items) (car items))
-	  (square-list (cdr items)))))
+          (square-list (cdr items)))))
 (define (square-list items)
   (map (lambda (x) (* x x)) items))
 
@@ -160,8 +160,8 @@
 ;-- 2.23
 (define (for-each fun lis)
   (cond ((null? lis) #t)
-	(else (fun (car lis))
-	      (for-each fun (cdr lis)))))
+        (else (fun (car lis))
+              (for-each fun (cdr lis)))))
 
 ;-- 2.24
 (list 1 (list 2 (list 3 4)))
@@ -211,10 +211,10 @@
 ;-- 2.27
 (define (deep-reverse li)
   (cond ((null? li) li)
-	(else (append (deep-reverse (cdr li))
-		      (list (if (pair? (car li))
-			      (deep-reverse (car li))
-			      (car li)))))))
+        (else (append (deep-reverse (cdr li))
+                      (list (if (pair? (car li))
+                              (deep-reverse (car li))
+                              (car li)))))))
 ; Test:
 (define x (list (list 1 2) (list 3 (list 4 5))))
 (deep-reverse x)
@@ -223,7 +223,7 @@
 (define (fringe node)
   (if (pair? node)
     (append (fringe (car node))
-	    (fringe (cdr node)))
+            (fringe (cdr node)))
     (if (null? node)
       '()
       (list node))))
@@ -273,15 +273,15 @@
 ;-- 2.30
 (define (square-tree tree)
   (cond ((null? tree) nil)
-	((not (pair? tree)) (* tree tree))
-	(else (cons (square-tree (car tree))
-		    (square-tree (cdr tree))))))
+        ((not (pair? tree)) (* tree tree))
+        (else (cons (square-tree (car tree))
+                    (square-tree (cdr tree))))))
 ; With map:
 (define (square-tree-map tree)
   (map (lambda (x)
-	 (cond ((null? x) nil)
-	       ((not (pair? x)) (* x x))
-	       (else (square-tree-map x))))
+         (cond ((null? x) nil)
+               ((not (pair? x)) (* x x))
+               (else (square-tree-map x))))
        tree))
 ; Tests:
 (define my-tree (list 1 (list 2 (list 3 4) 5) (list 6 7)))
@@ -291,9 +291,9 @@
 ;-- 2.31
 (define (tree-map function tree)
   (cond ((null? tree) nil)
-	((not (pair? tree)) (function tree))
-	(else (cons (tree-map function (car tree))
-		    (tree-map function (cdr tree))))))
+        ((not (pair? tree)) (function tree))
+        (else (cons (tree-map function (car tree))
+                    (tree-map function (cdr tree))))))
 
 ;-- 2.32
 (define (subsets s)
@@ -301,8 +301,8 @@
     (list nil)
     (let ((rest (subsets (cdr s))))
       (append rest
-	      (map (lambda (x) (cons (car s) x))
-		   rest)))))
+              (map (lambda (x) (cons (car s) x))
+                   rest)))))
 ; Test:
 (subsets (list 1 2 3))
 ; NB: doesn't seem to work well on sisc-scheme.
@@ -312,26 +312,26 @@
   (if (null? sequence)
     initial
     (op (car sequence)
-	(accumulate op initial (cdr sequence)))))
+        (accumulate op initial (cdr sequence)))))
 (define (map p sequence)
   (accumulate (lambda (x y) (cons (p x) y))
-	      nil
-	      sequence))
+              nil
+              sequence))
 (define (append seq1 seq2)
   (accumulate cons 
-	      seq2
-	      seq1))
+              seq2
+              seq1))
 (define (length sequence)
   (accumulate (lambda (x y) (+ 1 y))
-	      0
-	      sequence))
+              0
+              sequence))
 
 ;-- 2.34
 (define (horner-eval x coefficient-sequence)
   (accumulate (lambda (this-coeff higher-terms) (+ (* x higher-terms)
-										 this-coeff))
-	      0
-	      coefficient-sequence))
+                                                   this-coeff))
+              0
+              coefficient-sequence))
 ; Test:
 (horner-eval 2 (list 1 3 0 5 0 1))
 ; => 79
@@ -339,10 +339,10 @@
 ;-- 2.35
 (define (count-leaves t)
   (accumulate +
-	      0
-	      (map (lambda (node)
-		     (if (pair? node) (count-leaves node) 1))
-		   t)))
+              0
+              (map (lambda (node)
+                     (if (pair? node) (count-leaves node) 1))
+                   t)))
 ; Test:
 (count-leaves (list (list 1 2 3) (list (list 1 2) (list 2)) 2 3 (list 1 2)))
 ; => 10
@@ -352,12 +352,12 @@
   (if (null? (car seqs))
     nil
     (cons (accumulate op init (map car seqs))
-	  (accumulate-n op init (map cdr seqs)))))
+          (accumulate-n op init (map cdr seqs)))))
 ; Test:
 (define listoflist (list (list 1 2 3)
-					(list 4 5 6)
-					(list 7 8 9)
-					(list 10 11 12)))
+                         (list 4 5 6)
+                         (list 7 8 9)
+                         (list 10 11 12)))
 (accumulate-n + 0 listoflist)
 ; => (22 26 30)
 
@@ -370,12 +370,12 @@
        m))
 (define (transpose mat)
   (accumulate-n cons
-		'()
-		mat))
+                '()
+                mat))
 (define (matrix-*-matrix m n)
   (let ((cols (transpose n)))
     (map (lambda (x) (matrix-*-vector cols x))
-	 m)))
+         m)))
 
 ; Tests:
 (define matrix (list (list 1 2 3 4) (list 4 5 6 6) (list 6 7 8 9)))
@@ -396,7 +396,7 @@
     (if (null? rest)
       result
       (iter (op result (car rest))
-	    (cdr rest))))
+            (cdr rest))))
   (iter initial sequence))
 
 ; What are the values of:
@@ -424,15 +424,15 @@
   (if (null? sequence)
     initial
     (op (car sequence)
-	(fold-right op initial (cdr sequence)))))
+        (fold-right op initial (cdr sequence)))))
 (define (reverse sequence)
   (fold-right (lambda (item rest) (append rest (list item)))
-	      nil
-	      sequence))
+              nil
+              sequence))
 (define (reverse sequence)
   (fold-left (lambda (item rest) (cons rest item))
-	     nil
-	     sequence))
+             nil
+             sequence))
 
 ;-- 2.40
 ; Env:
@@ -442,22 +442,22 @@
     (append (list a) (enumerate-interval (+ a 1) b))))
 (define (filter predicate sequence) 
   (cond ((null? sequence) nil) 
-	((predicate (car sequence)) 
-	 (cons (car sequence)  
-	       (filter predicate (cdr sequence)))) 
-	(else (filter predicate (cdr sequence)))))
+        ((predicate (car sequence)) 
+         (cons (car sequence)  
+               (filter predicate (cdr sequence)))) 
+        (else (filter predicate (cdr sequence)))))
 (define nil '())
 (define (prime? x) 
   (define (test divisor) 
     (cond ((> (* divisor divisor) x) #t) 
-	  ((= 0 (remainder x divisor)) #f) 
-	  (else (test (+ divisor 1))))) 
+          ((= 0 (remainder x divisor)) #f) 
+          (else (test (+ divisor 1))))) 
   (test 2))
 (define (accumulate op initial sequence)
   (if (null? sequence)
     initial
     (op (car sequence)
-	(accumulate op initial (cdr sequence)))))
+        (accumulate op initial (cdr sequence)))))
 (define (flatmap proc seq)
   (accumulate append nil (map proc seq)))
 (define (prime-sum? pair)
@@ -467,17 +467,17 @@
 (define (prime-sum-pairs n)
   (map make-pair-sum
        (filter prime-sum?
-	       (flatmap
-		 (lambda (i)
-		   (map (lambda (j) (list i j))
-			(enumerate-interval 1 (- i 1))))
-		 (enumerate-interval 1 n)))))
+               (flatmap
+                 (lambda (i)
+                   (map (lambda (j) (list i j))
+                        (enumerate-interval 1 (- i 1))))
+                 (enumerate-interval 1 n)))))
 
 (define (unique-pairs n)
   (flatmap (lambda (i) 
-	     (map (lambda (j) (list i j))
-		  (enumerate-interval 1 (- i 1))))
-	   (enumerate-interval 1 n)))
+             (map (lambda (j) (list i j))
+                  (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
 
 (define (prime-sum-pairs n)
   (map make-pair-sum
@@ -489,12 +489,12 @@
 ; integer s. 
 (define (ordered-triples n s)
   (filter (lambda (triple) (= (fold-left + 0 triple) s))
-	  (flatmap (lambda (i)
-		     (flatmap (lambda (j)
-				(map (lambda (k) (list i j k))
-				     (enumerate-interval 1 j)))
-			      (enumerate-interval 1 i)))
-		   (enumerate-interval 1 n))))
+          (flatmap (lambda (i)
+                     (flatmap (lambda (j)
+                                (map (lambda (k) (list i j k))
+                                     (enumerate-interval 1 j)))
+                              (enumerate-interval 1 i)))
+                   (enumerate-interval 1 n))))
 
 ;-- 2.42
 ; Env:
@@ -505,15 +505,15 @@
     (append (list a) (enumerate-interval (+ a 1) b))))
 (define (filter predicate sequence) 
   (cond ((null? sequence) nil) 
-	((predicate (car sequence)) 
-	 (cons (car sequence)  
-	       (filter predicate (cdr sequence)))) 
-	(else (filter predicate (cdr sequence)))))
+        ((predicate (car sequence)) 
+         (cons (car sequence)  
+               (filter predicate (cdr sequence)))) 
+        (else (filter predicate (cdr sequence)))))
 (define (accumulate op initial sequence)
   (if (null? sequence)
     initial
     (op (car sequence)
-	(accumulate op initial (cdr sequence)))))
+        (accumulate op initial (cdr sequence)))))
 (define (flatmap proc seq)
   (accumulate append nil (map proc seq)))
 
@@ -523,13 +523,13 @@
     (if (= k 0)
       (list empty-board)
       (filter
-	(lambda (positions) (safe? k positions))
-	(flatmap
-	  (lambda (rest-of-queens)
-	    (map (lambda (new-row)
-		   (adjoin-position new-row k rest-of-queens))
-		 (enumerate-interval 1 board-size)))
-	  (queen-cols (- k 1))))))
+        (lambda (positions) (safe? k positions))
+        (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position new-row k rest-of-queens))
+                 (enumerate-interval 1 board-size)))
+          (queen-cols (- k 1))))))
   (queen-cols board-size))
 
 ; Helper functions:
@@ -537,12 +537,12 @@
 (define (adjoin-position new-row k rest-of-queens)
   (append (list (cons k new-row)) rest-of-queens))
 (define (same-line queen-a queen-b) ; Coordinates are (x,y) pairs. If the y is
-  							 ; the same for both queens, they are on the
-							 ; same line.
+  ; the same for both queens, they are on the
+  ; same line.
   (= (cdr queen-a) (cdr queen-b)))
 (define (same-diagonal queen-a queen-b) ; Two queens are on the same diagonal
-  								; if their horizontal distance is equal
-								; to their vertical distance
+  ; if their horizontal distance is equal
+  ; to their vertical distance
   (= (- (car queen-a) (car queen-b))
      (abs (- (cdr queen-a) (cdr queen-b)))))
 (define (safe? k positions)
@@ -550,9 +550,9 @@
     (if (null? other-queens)
       #t
       (let ((qtt (car other-queens))) ;qtt = queen to test
-	(cond ((same-line queen-pos qtt) #f) ; Same line
-	      ((same-diagonal queen-pos qtt) #f) ; Diagonal
-	      (else (safe-iter queen-pos (cdr other-queens)))))))
+        (cond ((same-line queen-pos qtt) #f) ; Same line
+              ((same-diagonal queen-pos qtt) #f) ; Diagonal
+              (else (safe-iter queen-pos (cdr other-queens)))))))
   (safe-iter (car positions) (cdr positions)))
 
 
@@ -590,7 +590,7 @@
     (if (= n 0)
       painter
       (let ((smaller (new-split painter (- n 1))))
-	(first-transform painter (second-transform smaller smaller)))))
+        (first-transform painter (second-transform smaller smaller)))))
   (lambda (painter n) (new-split painter n)))
 
 ; A cleverer version that avoids having to name the lambda in order to recurse,
@@ -598,11 +598,11 @@
 (define (split first-transform second-transform)
   (lambda (painter n)
     (if (= n 0)
-	 painter
-	 (let ((smaller ((split first-transform second-transform)
-				  painter
-				  (- n 1))))
-	   (first-transform painter (second-transform smaller smaller))))))
+      painter
+      (let ((smaller ((split first-transform second-transform)
+                      painter
+                      (- n 1))))
+        (first-transform painter (second-transform smaller smaller))))))
 
 ;-- 2.46
 (define (make-vect x y)
@@ -613,13 +613,13 @@
   (cdr vect))
 (define (add-vect v1 v2)
   (make-vect (+ (xcor-vect v1) (xcor-vect v2))
-	     (+ (ycor-vect v1) (ycor-vect v2))))
+             (+ (ycor-vect v1) (ycor-vect v2))))
 (define (sub-vect v1 v2)
   (make-vect (- (xcor-vect v1) (xcor-vect v2))
-	     (- (ycor-vect v1) (ycor-vect v2))))
+             (- (ycor-vect v1) (ycor-vect v2))))
 (define (scale-vect s vect)
   (make-vect (* s (xcor-vect vect))
-	     (* s (ycor-vect vect))))
+             (* s (ycor-vect vect))))
 
 ;-- 2.45
 (define (make-frame origin edge1 edge2)
@@ -665,7 +665,7 @@
 (define (equal? a b)
   (if (and (pair? a) (pair? b))     ; two pairs : we test deeper
     (and (equal? (car a) (car b))
-	 (equal? (cdr a) (cdr b)))
+         (equal? (cdr a) (cdr b)))
     (eq? a b))) ; everything else is handled by eq?
 
 ;-- 2.55
@@ -681,7 +681,7 @@
 (define (same-variable? v1 v2)
   (and (variable? v1) (variable? v2) (eq? v1 v2)))
 (define (make-sum a1 a2) (list '+ a1 a2)) ; Naive implementation; will be
-								  ; replaced afterwards
+; replaced afterwards
 (define (make-product m1 m2) (list '* m1 m2)) ; Same
 (define (sum? x)
   (and (pair? x) (eq? (car x) '+)))
@@ -693,17 +693,17 @@
 (define (multiplicand p) (caddr p))
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
-	((=number? a2 0) a1)
-	((and (number? a1) (number? a2)) (+ a1 a2))
-	(else (list '+ a1 a2))))
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list '+ a1 a2))))
 (define (=number? exp num)
   (and (number? exp) (= exp num)))
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
-	((=number? m1 1) m2)
-	((=number? m2 1) m1)
-	((and (number? m1) (number? m2)) (* m1 m2))
-	(else (list '* m1 m2))))
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list '* m1 m2))))
 
 ; The question itself:
 (define (exponentiation? x)
@@ -712,32 +712,32 @@
 (define exponent caddr)
 (define (make-exponentiation base exponent)
   (cond ((=number? base 1) 1)
-	((=number? exponent 0) 1)
-	((=number? exponent 1) base)
-	((and (number? base) (number? exponent)) (expt base exponent))
-	(else (list '** base exponent))))
+        ((=number? exponent 0) 1)
+        ((=number? exponent 1) base)
+        ((and (number? base) (number? exponent)) (expt base exponent))
+        (else (list '** base exponent))))
 (define (deriv exp var)
   (cond ((number? exp) 0)
-	((variable? exp)
-	 (if (same-variable? exp var) 1 0))
-	((sum? exp)
-	 (make-sum (deriv (addend exp) var)
-		   (deriv (augend exp) var)))
-	((product? exp)
-	 (make-sum
-	   (make-product (multiplier exp)
-			 (deriv (multiplicand exp) var))
-	   (make-product (deriv (multiplier exp) var)
-			 (multiplicand exp))))
-	((exponentiation? exp)
-	 (make-product (make-product (exponent exp)
-				     (make-exponentiation (base exp)
-							  (if (number? (exponent exp))
-							    (- (exponent exp) 1)
-							    (list '- (exponent exp) '1))))
-		       (deriv (base exp) var)))
-	(else
-	  (error "unknown expression type -- DERIV" exp))))
+        ((variable? exp)
+         (if (same-variable? exp var) 1 0))
+        ((sum? exp)
+         (make-sum (deriv (addend exp) var)
+                   (deriv (augend exp) var)))
+        ((product? exp)
+         (make-sum
+           (make-product (multiplier exp)
+                         (deriv (multiplicand exp) var))
+           (make-product (deriv (multiplier exp) var)
+                         (multiplicand exp))))
+        ((exponentiation? exp)
+         (make-product (make-product (exponent exp)
+                                     (make-exponentiation (base exp)
+                                                          (if (number? (exponent exp))
+                                                            (- (exponent exp) 1)
+                                                            (list '- (exponent exp) '1))))
+                       (deriv (base exp) var)))
+        (else
+          (error "unknown expression type -- DERIV" exp))))
 
 ; Test cases:
 (deriv '(** 5 6) '2)
@@ -759,10 +759,10 @@
     (append '(+) (cddr s))))    ; A new addition comprised of the next terms
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
-	((=number? a2 0) a1)
-	((and (number? a1) (number? a2)) (+ a1 a2))
-	((sum? a2) (make-sum a1 (make-sum (addend a2) (augend a2))))
-	(else (list '+ a1 a2))))
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        ((sum? a2) (make-sum a1 (make-sum (addend a2) (augend a2))))
+        (else (list '+ a1 a2))))
 (define (multiplier p) (cadr p))
 (define (multiplicand p)
   (if (null? (cdddr p))
@@ -770,12 +770,12 @@
     (append '(*) (cddr p))))
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
-	((=number? m1 1) m2)
-	((=number? m2 1) m1)
-	((product? m2) (make-product m1 (make-product (multiplier m2)
-										 (multiplicand m2))))
-	((and (number? m1) (number? m2)) (* m1 m2))
-	(else (list '* m1 m2))))
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((product? m2) (make-product m1 (make-product (multiplier m2)
+                                                      (multiplicand m2))))
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list '* m1 m2))))
 
 ; Test:
 (deriv '(* x y (+ x 3)) 'x)
@@ -789,19 +789,19 @@
 (define augend caddr)
 (define (make-sum a1 a2)
   (cond ((=number? a1 0) a2)
-	((=number? a2 0) a1)
-	((and (number? a1) (number? a2)) (+ a1 a2))
-	(else (list a1 '+ a2))))
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list a1 '+ a2))))
 (define (product? x)
   (and (pair? x) (pair? (cdr x)) (eq? (cadr x) '*)))
 (define multiplier car)
 (define multiplicand caddr)
 (define (make-product m1 m2)
   (cond ((or (=number? m1 0) (=number? m2 0)) 0)
-	((=number? m1 1) m2)
-	((=number? m2 1) m1)
-	((and (number? m1) (number? m2)) (* m1 m2))
-	(else (list m1 '* m2))))
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list m1 '* m2))))
 
 ; Test:
 (deriv '(x + (3 * (x + (y + 2)))) 'x)
@@ -814,28 +814,28 @@
 ; Functions given:
 (define (element-of-set? x set)
   (cond ((null? set) #f) ; "false" and "true" replaced by their Scheme
-	   				; equivalent for convenience
-	((equal? x (car set)) #t)
-	(else (element-of-set? x (cdr set)))))
+        ; equivalent for convenience
+        ((equal? x (car set)) #t)
+        (else (element-of-set? x (cdr set)))))
 (define (adjoin-set x set)
   (if (element-of-set? x set)
     set
     (cons x set)))
 (define (intersection-set set1 set2)
   (cond ((or (null? set1) (null? set2)) '())
-	((element-of-set? (car set1) set2)
-	 (cons (car set1)
-	       (intersection-set (cdr set1) set2)))
-	(else (intersection-set (cdr set1) set2))))
+        ((element-of-set? (car set1) set2)
+         (cons (car set1)
+               (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
 
 ; Union:
 (define (union-set set1 set2)
   (cond ((null? set1) set2) ; We'll add elements of set1 to set2 (given they're
-	   				   ; not already present in set2)
-	((element-of-set? (car set1) set2)
-	 (union-set (cdr set1) set2))
-	(else (cons (car set1)
-		    (union-set (cdr set1) set2)))))
+        ; not already present in set2)
+        ((element-of-set? (car set1) set2)
+         (union-set (cdr set1) set2))
+        (else (cons (car set1)
+                    (union-set (cdr set1) set2)))))
 
 ; Test:
 (define s1 (list 1 2 3 4 5))
@@ -866,27 +866,27 @@
 ; Functions given:
 (define (element-of-set? x set)
   (cond ((null? set) false)
-	((= x (car set)) true)
-	((< x (car set)) false)
-	(else (element-of-set? x (cdr set)))))
+        ((= x (car set)) true)
+        ((< x (car set)) false)
+        (else (element-of-set? x (cdr set)))))
 (define (intersection-set set1 set2)
   (if (or (null? set1) (null? set2))
     '()
     (let ((x1 (car set1)) (x2 (car set2)))
       (cond ((= x1 x2)
-	     (cons x1
-		   (intersection-set (cdr set1)
-				     (cdr set2))))
-	    ((< x1 x2)
-	     (intersection-set (cdr set1) set2))
-	    ((< x2 x1)
-	     (intersection-set set1 (cdr set2)))))))
+             (cons x1
+                   (intersection-set (cdr set1)
+                                     (cdr set2))))
+            ((< x1 x2)
+             (intersection-set (cdr set1) set2))
+            ((< x2 x1)
+             (intersection-set set1 (cdr set2)))))))
 
 ; Answer:
 (define (adjoin-set x set)
   (cond ((or (null? set) (< x (car set))) (cons x set))
-	((= x (car set)) set)
-	(else (cons (car set) (adjoin-set x (cdr set))))))
+        ((= x (car set)) set)
+        (else (cons (car set) (adjoin-set x (cdr set))))))
 
 ; Test:
 (define s4 (list 1 2 3 5 6))
@@ -901,11 +901,11 @@
     set2
     (let ((x1 (car set1)) (x2 (car set2)))
       (cond ((= x1 x2)
-	     (cons x1 (union-set (cdr set1) (cdr set2))))
-	    ((< x1 x2)
-	     (cons x1 (union-set (cdr set1) set2)))
-	    ((< x2 x1)
-	     (cons x2 (union-set set1 (cdr set2))))))))
+             (cons x1 (union-set (cdr set1) (cdr set2))))
+            ((< x1 x2)
+             (cons x1 (union-set (cdr set1) set2)))
+            ((< x2 x1)
+             (cons x2 (union-set set1 (cdr set2))))))))
 ; This implementation is O(n) because each iteration selects an item from
 ; either set1 or set2 and cons it (an O(1) operation). There are n iterations
 ; at most, n being the length of set1 + the length of set2, hence an O(n) total
@@ -926,22 +926,22 @@
   (list entry left right))
 (define (element-of-set? x set)
   (cond ((null? set) #f)
-	((= x (entry set)) #t)
-	((< x (entry set))
-	 (element-of-set? x (left-branch set)))
-	((> x (entry set))
-	 (element-of-set? x (right-branch set)))))
+        ((= x (entry set)) #t)
+        ((< x (entry set))
+         (element-of-set? x (left-branch set)))
+        ((> x (entry set))
+         (element-of-set? x (right-branch set)))))
 (define (adjoin-set x set)
   (cond ((null? set) (make-tree x '() '()))
-	((= x (entry set)) set)
-	((< x (entry set))
-	 (make-tree (entry set)
-		    (adjoin-set x (left-branch set))
-		    (right-branch set)))
-	((> x (entry set))
-	 (make-tree (entry set)
-		    (left-branch set)
-		    (adjoin-set x (right-branch set))))))
+        ((= x (entry set)) set)
+        ((< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-set x (left-branch set))
+                    (right-branch set)))
+        ((> x (entry set))
+         (make-tree (entry set)
+                    (left-branch set)
+                    (adjoin-set x (right-branch set))))))
 
 ; a.
 ; Do the two procedures produce the same result for every tree?
@@ -964,16 +964,16 @@
     (cons '() elts)
     (let ((left-size (quotient (- n 1) 2)))
       (let ((left-result (partial-tree elts left-size)))
-	(let ((left-tree (car left-result))
-	      (non-left-elts (cdr left-result))
-	      (right-size (- n (+ left-size 1))))
-	  (let ((this-entry (car non-left-elts))
-		(right-result (partial-tree (cdr non-left-elts)
-					    right-size)))
-	    (let ((right-tree (car right-result))
-		  (remaining-elts (cdr right-result)))
-	      (cons (make-tree this-entry left-tree right-tree)
-		    remaining-elts))))))))
+        (let ((left-tree (car left-result))
+              (non-left-elts (cdr left-result))
+              (right-size (- n (+ left-size 1))))
+          (let ((this-entry (car non-left-elts))
+                (right-result (partial-tree (cdr non-left-elts)
+                                            right-size)))
+            (let ((right-tree (car right-result))
+                  (remaining-elts (cdr right-result)))
+              (cons (make-tree this-entry left-tree right-tree)
+                    remaining-elts))))))))
 
 ; a.
 ; Partial-tree splits the list given in two parts of equal size (modulo 1).
@@ -1003,13 +1003,13 @@
 ; We will reuse filter from a few exercises back
 (define (filter predicate sequence)
   (cond ((null? sequence) '())
-	((predicate (car sequence))
-	 (cons (car sequence)
-	       (filter predicate (cdr sequence))))
-	(else (filter predicate (cdr sequence)))))
+        ((predicate (car sequence))
+         (cons (car sequence)
+               (filter predicate (cdr sequence))))
+        (else (filter predicate (cdr sequence)))))
 (define (intersection-set tree1 tree2)
   (list->tree (filter (lambda (x) (element-of-set? x tree1))
-		      (tree->list-1 tree2))))
+                      (tree->list-1 tree2))))
 (define (union-set tree1 tree2)
   (define (union-tree-list t l)
     (if (null? l)
@@ -1027,10 +1027,10 @@
 (define tree->list tree->list-1)
 (define (intersection-set-tree tree1 tree2)
   (list->tree (intersection-set (tree->list tree1)
-				(tree->list tree2))))
+                                (tree->list tree2))))
 (define (union-set-tree tree1 tree2)
   (list->tree (union-set (tree->list tree1)
-			 (tree->list tree2))))
+                         (tree->list tree2))))
 ; Complexity: all operations are O(n) as shown in 2.62 and performed
 ; sequentially; hence the result is O(n) too.
 
@@ -1055,11 +1055,11 @@
 ;-- 2.66
 (define (lookup given-key set-of-records)
   (cond ((null? set-of-records) #f)
-	((= given-key (key set-of-records)) true)
-	((< given-key (key set-of-records))
-	 (lookup given-key (left-branch set-of-records)))
-	((> given-key (key set-of-records))
-	 (lookup given-key (right-branch set-of-records)))))
+        ((= given-key (key set-of-records)) true)
+        ((< given-key (key set-of-records))
+         (lookup given-key (left-branch set-of-records)))
+        ((> given-key (key set-of-records))
+         (lookup given-key (right-branch set-of-records)))))
 ; Basically just a tree lookup.
 
 ;-- 2.67
@@ -1073,9 +1073,9 @@
 (define (weight-leaf x) (caddr x))
 (define (make-code-tree left right)
   (list left
-	right
-	(append (symbols left) (symbols right))
-	(+ (weight left) (weight right))))
+        right
+        (append (symbols left) (symbols right))
+        (+ (weight left) (weight right))))
 (define (left-branch tree) (car tree))
 (define (right-branch tree) (cadr tree))
 (define (symbols tree)
@@ -1091,36 +1091,36 @@
     (if (null? bits)
       '()
       (let ((next-branch
-	      (choose-branch (car bits) current-branch)))
-	(if (leaf? next-branch)
-	  (cons (symbol-leaf next-branch)
-		(decode-1 (cdr bits) tree))
-	  (decode-1 (cdr bits) next-branch)))))
+              (choose-branch (car bits) current-branch)))
+        (if (leaf? next-branch)
+          (cons (symbol-leaf next-branch)
+                (decode-1 (cdr bits) tree))
+          (decode-1 (cdr bits) next-branch)))))
   (decode-1 bits tree))
 (define (choose-branch bit branch)
   (cond ((= bit 0) (left-branch branch))
-	((= bit 1) (right-branch branch))
-	(else (error "bad bit -- CHOOSE-BRANCH" bit))))
+        ((= bit 1) (right-branch branch))
+        (else (error "bad bit -- CHOOSE-BRANCH" bit))))
 (define (adjoin-set x set)
   (cond ((null? set) (list x))
-	((< (weight x) (weight (car set))) (cons x set))
-	(else (cons (car set)
-		    (adjoin-set x (cdr set))))))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+                    (adjoin-set x (cdr set))))))
 (define (make-leaf-set pairs)
   (if (null? pairs)
     '()
     (let ((pair (car pairs)))
       (adjoin-set (make-leaf (car pair)    ; symbol
-			     (cadr pair))  ; frequency
-		  (make-leaf-set (cdr pairs))))))
+                             (cadr pair))  ; frequency
+                  (make-leaf-set (cdr pairs))))))
 
 ; Question:
 (define sample-tree
   (make-code-tree (make-leaf 'A 4)
-		  (make-code-tree
-		    (make-leaf 'B 2)
-		    (make-code-tree (make-leaf 'D 1)
-				    (make-leaf 'C 1)))))
+                  (make-code-tree
+                    (make-leaf 'B 2)
+                    (make-code-tree (make-leaf 'D 1)
+                                    (make-leaf 'C 1)))))
 (define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
 (decode sample-message sample-tree)
 ; (a d a b b c a)
@@ -1131,15 +1131,15 @@
   (if (null? message)
     '()
     (append (encode-symbol (car message) tree)
-	    (encode (cdr message) tree))))
+            (encode (cdr message) tree))))
 
 ; Answer:
 (define (encode-symbol symbol tree)
   (cond ((and (leaf? tree) (eq? symbol (symbol-leaf tree))) '())
-	((memq symbol (symbols (left-branch tree)))
-	 (cons '0 (encode-symbol symbol (left-branch tree))))
-	((memq symbol (symbols (right-branch tree)))
-	 (cons '1 (encode-symbol symbol (right-branch tree))))))
+        ((memq symbol (symbols (left-branch tree)))
+         (cons '0 (encode-symbol symbol (left-branch tree))))
+        ((memq symbol (symbols (right-branch tree)))
+         (cons '1 (encode-symbol symbol (right-branch tree))))))
 
 ; Tests:
 (encode-symbol 'a sample-tree)
@@ -1164,7 +1164,7 @@
   (if (= (length leaves) 2)
     (make-code-tree (car leaves) (cadr leaves))
     (successive-merge-1 (cons (make-code-tree (car leaves) (cadr leaves))
-			      (cddr leaves)))))
+                              (cddr leaves)))))
 ; Test:
 (generate-huffman-tree-1 '((A 4) (B 2) (C 1) (D 1)))
 ;((((leaf d 1) (leaf c 1) (d c) 2) (leaf b 2) (d c b) 4) (leaf a 4) (d c b a) 8)
@@ -1179,7 +1179,7 @@
   (if (= (length nodes) 1)
     (car nodes)
     (successive-merge2 (adjoin-set (make-code-tree (car nodes) (cadr nodes))
-				   (cddr nodes)))))
+                                   (cddr nodes)))))
 (define (generate-huffman-tree pairs)
   (successive-merge (make-leaf-set pairs)))
 (generate-huffman-tree '((A 8) (B 3) (C 1) (D 1) (E 1) (F 1) (G 1) (H 1)))
@@ -1230,9 +1230,9 @@ encoded-rock-song
 ;-- 2.73
 (define (deriv exp var)
   (cond ((number? exp) 0)
-	((variable? exp) (if (same-variable? exp var) 1 0))
-	(else ((get 'deriv (operator exp)) (operands exp)
-					   var))))
+        ((variable? exp) (if (same-variable? exp var) 1 0))
+        (else ((get 'deriv (operator exp)) (operands exp)
+                                           var))))
 (define (operator exp) (car exp))
 (define (operands exp) (cdr exp))
 
@@ -1256,26 +1256,26 @@ encoded-rock-song
     (and (pair? x) (eq? (car x) '*)))
   (define (make-sum a1 a2)
     (cond ((=number? a1 0) a2)
-	  ((=number? a2 0) a1)
-	  ((and (number? a1) (number? a2)) (+ a1 a2))
-	  (else (list '+ a1 a2))))
+          ((=number? a2 0) a1)
+          ((and (number? a1) (number? a2)) (+ a1 a2))
+          (else (list '+ a1 a2))))
   (define (=number? exp num)
     (and (number? exp) (= exp num)))
   (define (make-product m1 m2)
     (cond ((or (=number? m1 0) (=number? m2 0)) 0)
-	  ((=number? m1 1) m2)
-	  ((=number? m2 1) m1)
-	  ((and (number? m1) (number? m2)) (* m1 m2))
-	  (else (list '* m1 m2))))
+          ((=number? m1 1) m2)
+          ((=number? m2 1) m1)
+          ((and (number? m1) (number? m2)) (* m1 m2))
+          (else (list '* m1 m2))))
   (define (compute-sum sum var)
     (make-sum (deriv (addend sum) var)
-	      (deriv (augend sum) var)))
+              (deriv (augend sum) var)))
   (define (compute-product pro var)
     (make-sum
       (make-product (multiplier pro)
-		    (deriv (multiplicand pro) var))
+                    (deriv (multiplicand pro) var))
       (make-product (deriv (multiplier pro) var)
-		    (multiplicand pro))))
+                    (multiplicand pro))))
   ;; interface to the rest of the system
   (put 'sum? '(deriv) sum?)
   (put 'product? '(deriv) product?)
@@ -1295,17 +1295,17 @@ encoded-rock-song
   (define exponent cadr)
   (define (make-exponentiation base exponent)
     (cond ((=number? base 1) 1)
-	  ((=number? exponent 0) 1)
-	  ((=number? exponent 1) base)
-	  ((and (number? base) (number? exponent)) (expt base exponent))
-	  (else (list '** base exponent))))
+          ((=number? exponent 0) 1)
+          ((=number? exponent 1) base)
+          ((and (number? base) (number? exponent)) (expt base exponent))
+          (else (list '** base exponent))))
   (define (compute-exponentiation exp var)
     (make-product (make-product (exponent exp)
-				(make-exponentiation (base exp)
-						     (if (number? (exponent exp))
-						       (- (exponent exp) 1)
-						       (list '- (exponent exp) '1))))
-		  (deriv (base exp) var)))
+                                (make-exponentiation (base exp)
+                                                     (if (number? (exponent exp))
+                                                       (- (exponent exp) 1)
+                                                       (list '- (exponent exp) '1))))
+                  (deriv (base exp) var)))
   ; Interface:
   (put 'exponentiation? '(deriv) exponentiation?)
   (put '** 'deriv compute-exponentiation)
@@ -1350,12 +1350,12 @@ encoded-rock-song
 (define (make-from-real-imag x y)
   (define (dispatch op)
     (cond ((eq? op 'real-part) x)
-	  ((eq? op 'imag-part) y)
-	  ((eq? op 'magnitude)
-	   (sqrt (+ (square x) (square y))))
-	  ((eq? op 'angle) (atan y x))
-	  (else
-	    (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+          ((eq? op 'imag-part) y)
+          ((eq? op 'magnitude)
+           (sqrt (+ (square x) (square y))))
+          ((eq? op 'angle) (atan y x))
+          (else
+            (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
   dispatch)
 (define (apply-generic op arg) (arg op))
 
@@ -1363,11 +1363,11 @@ encoded-rock-song
 (define (make-from-mag-ang r A)
   (define (dispatch op)
     (cond ((eq? op 'real-part) (* r (cos A)))
-	  ((eq? op 'imag-part) (* r (sin A)))
-	  ((eq? op 'magnitude) r)
-	  ((eq? op 'angle) A)
-	  (else
-	    (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+          ((eq? op 'imag-part) (* r (sin A)))
+          ((eq? op 'magnitude) r)
+          ((eq? op 'angle) A)
+          (else
+            (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
   dispatch)
 
 ;-- 2.76
@@ -1380,24 +1380,24 @@ encoded-rock-song
     (cons type-tag contents)))
 (define (type-tag datum)
   (cond ((pair? datum) (car datum))
-	((number? datum) 'scheme-number)
-	(else (error "Bad tagged datum -- TYPE-TAG" datum))))
+        ((number? datum) 'scheme-number)
+        (else (error "Bad tagged datum -- TYPE-TAG" datum))))
 (define (contents datum)
   (cond ((pair? datum) (cdr datum))
-	((number? datum) datum)
-	(else (error "Bad tagged datum -- CONTENTS" datum))))
+        ((number? datum) datum)
+        (else (error "Bad tagged datum -- CONTENTS" datum))))
 
 ;-- 2.79
 (define install-equ-package
   (put 'equ? '(scheme-number scheme-number) =)
   (put 'equ? '(rational rational)
        (lambda (x y)
-	 (= (* (numer x) (denom y))
-	    (* (numer y) (denom x)))))
+         (= (* (numer x) (denom y))
+            (* (numer y) (denom x)))))
   (put 'equ? '(complex complex)
        (lambda (x y)
-	 (and (= (real-part x) (real-part y))
-	      (= (imag-part x) (imag-part y)))))
+         (and (= (real-part x) (real-part y))
+              (= (imag-part x) (imag-part y)))))
   'done)
 (define (equ? x y)
   (apply-generic 'equ? x y))
@@ -1423,30 +1423,30 @@ encoded-rock-song
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
       (if proc
-	(apply proc (map contents args))
-	(if (= (length args) 2)
-	  (let ((type1 (car type-tags))
-		(type2 (cadr type-tags))
-		(a1 (car args))
-		(a2 (cadr args)))
-	    (let ((t1->t2 (get-coercion type1 type2))
-		  (t2->t1 (get-coercion type2 type1)))
-	      (cond (t1->t2
-		      (apply-generic op (t1->t2 a1) a2))
-		    (t2->t1
-		      (apply-generic op a1 (t2->t1 a2)))
-		    (else
-		      (error "No method for these types"
-			     (list op type-tags))))))
-	  (error "No method for these types"
-		 (list op type-tags)))))))
+        (apply proc (map contents args))
+        (if (= (length args) 2)
+          (let ((type1 (car type-tags))
+                (type2 (cadr type-tags))
+                (a1 (car args))
+                (a2 (cadr args)))
+            (let ((t1->t2 (get-coercion type1 type2))
+                  (t2->t1 (get-coercion type2 type1)))
+              (cond (t1->t2
+                      (apply-generic op (t1->t2 a1) a2))
+                    (t2->t1
+                      (apply-generic op a1 (t2->t1 a2)))
+                    (else
+                      (error "No method for these types"
+                             (list op type-tags))))))
+          (error "No method for these types"
+                 (list op type-tags)))))))
 
 ; a.
 ; Given:
 (define (scheme-number->scheme-number n) n)
 (define (complex->complex z) z)
 (put-coercion 'scheme-number 'scheme-number
-	      scheme-number->scheme-number)
+              scheme-number->scheme-number)
 (put-coercion 'complex 'complex complex->complex)
 (define (exp x y) (apply-generic 'exp x y))
 ;; following added to Scheme-number package
@@ -1469,58 +1469,58 @@ encoded-rock-song
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
       (if proc
-	(apply proc (map contents args))
-	(if (and (= (length args) 2) (not (eq? (car type-tags) (cadr type-tags))))
-	  (let ((type1 (car type-tags))
-		(type2 (cadr type-tags))
-		(a1 (car args))
-		(a2 (cadr args)))
-	    (let ((t1->t2 (get-coercion type1 type2))
-		  (t2->t1 (get-coercion type2 type1)))
-	      (cond (t1->t2
-		      (apply-generic op (t1->t2 a1) a2))
-		    (t2->t1
-		      (apply-generic op a1 (t2->t1 a2)))
-		    (else
-		      (error "No method for these types"
-			     (list op type-tags))))))
-	  (error "No method for these types"
-		 (list op type-tags)))))))
+        (apply proc (map contents args))
+        (if (and (= (length args) 2) (not (eq? (car type-tags) (cadr type-tags))))
+          (let ((type1 (car type-tags))
+                (type2 (cadr type-tags))
+                (a1 (car args))
+                (a2 (cadr args)))
+            (let ((t1->t2 (get-coercion type1 type2))
+                  (t2->t1 (get-coercion type2 type1)))
+              (cond (t1->t2
+                      (apply-generic op (t1->t2 a1) a2))
+                    (t2->t1
+                      (apply-generic op a1 (t2->t1 a2)))
+                    (else
+                      (error "No method for these types"
+                             (list op type-tags))))))
+          (error "No method for these types"
+                 (list op type-tags)))))))
 
 ;-- 2.82
 (define (apply-generic op . args)
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
       (if proc
-	(apply proc (map contents args))
-	(let ((working-type (find-working-type op args type-tags)))
-	  (if working-type
-	    (apply-generic op (map (lambda (arg)
-				     (if (eq? (type-tag arg) working-type)
-				       arg
-				       ((get-coercion (type-tag arg) working-type) arg)))
-				   args))
-	    (error "No method for these types" (list op type-tags))))))))
+        (apply proc (map contents args))
+        (let ((working-type (find-working-type op args type-tags)))
+          (if working-type
+            (apply-generic op (map (lambda (arg)
+                                     (if (eq? (type-tag arg) working-type)
+                                       arg
+                                       ((get-coercion (type-tag arg) working-type) arg)))
+                                   args))
+            (error "No method for these types" (list op type-tags))))))))
 ; With find-working-type defined as:
 (define (find-working-type op type-tags)
   (define (check-coercions type-tags new-type)
     (if (null? type-tags)
       #t
       (if (or (eq? (car type-tags) new-type)
-	      (get-coercion (car type-tags) new-type))
-	(check-coercions (cdr type-tags) new-type)
-	#f)))
+              (get-coercion (car type-tags) new-type))
+        (check-coercions (cdr type-tags) new-type)
+        #f)))
   (define (find-iter op type-tags type-tags-to-test)
     (if (null? type-tags-to-test)
       #f
       (let* ((tested-tag (car type-tags-to-test))
-	     (proc (get op (map (lambda (x) tested-tag)
-				type-tags))))
-	(if proc ; there is a procedure that takes all arguments as tested-tag
-	  (if (check-coercions type-tags tested-tag); and we can convert all
-	    								    ; arguments to said tested-tag
-	    tested-tag
-	    (find-iter op type-tags (cdr to-test)))))))
+             (proc (get op (map (lambda (x) tested-tag)
+                                type-tags))))
+        (if proc ; there is a procedure that takes all arguments as tested-tag
+          (if (check-coercions type-tags tested-tag); and we can convert all
+            ; arguments to said tested-tag
+            tested-tag
+            (find-iter op type-tags (cdr to-test)))))))
   (find-iter op type-tags type-tags))
 
 ; NB: untested.
@@ -1543,8 +1543,8 @@ encoded-rock-song
   (let* ((type1-sublist (memq type1 typelist)))
     (if type1-sublist
       (if (memq type2 type1-sublist)
-	#t
-	#f)
+        #t
+        #f)
       #f)))
 
 ; Adapting apply-generic from 2.82:
@@ -1552,12 +1552,12 @@ encoded-rock-song
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
       (if proc
-	(apply proc (map contents args))
-	(let ((working-type (find-working-type op args type-tags)))
-	  (if working-type
-	    (apply-generic op (map (lambda (arg) (raise-until working-type arg))
-				   args))
-	    (error "No method for these types" (list op type-tags))))))))
+        (apply proc (map contents args))
+        (let ((working-type (find-working-type op args type-tags)))
+          (if working-type
+            (apply-generic op (map (lambda (arg) (raise-until working-type arg))
+                                   args))
+            (error "No method for these types" (list op type-tags))))))))
 (define (raise-until type element)
   (if (eq? type (type-tage element))
     element
@@ -1585,13 +1585,13 @@ encoded-rock-song
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags)))
       (if proc
-	(drop (apply proc (map contents args)))
-	(let ((working-type (find-working-type op args type-tags)))
-	  (if working-type
-	    (drop (apply-generic op (map (lambda (arg) (raise-until working-type
-													arg))
-					 args)))
-	    (error "No method for these types" (list op type-tags))))))))
+        (drop (apply proc (map contents args)))
+        (let ((working-type (find-working-type op args type-tags)))
+          (if working-type
+            (drop (apply-generic op (map (lambda (arg) (raise-until working-type
+                                                                    arg))
+                                         args)))
+            (error "No method for these types" (list op type-tags))))))))
 
 ;-- 2.86
 ; Complicated question. Needs further research.
@@ -1624,17 +1624,17 @@ encoded-rock-song
   (define (add-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
       (make-poly (variable p1)
-		 (add-terms (term-list p1)
-			    (term-list p2)))
+                 (add-terms (term-list p1)
+                            (term-list p2)))
       (error "Polys not in same var -- ADD-POLY"
-	     (list p1 p2))))
+             (list p1 p2))))
   (define (mul-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
       (make-poly (variable p1)
-		 (mul-terms (term-list p1)
-			    (term-list p2)))
+                 (mul-terms (term-list p1)
+                            (term-list p2)))
       (error "Polys not in same var -- MUL-POLY"
-	     (list p1 p2))))
+             (list p1 p2))))
   ;; interface to rest of the system
   (define (tag p) (attach-tag 'polynomial p))
   (put 'add '(polynomial polynomial)
@@ -1646,34 +1646,34 @@ encoded-rock-song
   'done)
 (define (add-terms L1 L2)
   (cond ((empty-termlist? L1) L2)
-	((empty-termlist? L2) L1)
-	(else
-	  (let ((t1 (first-term L1)) (t2 (first-term L2)))
-	    (cond ((> (order t1) (order t2))
-		   (adjoin-term
-		     t1 (add-terms (rest-terms L1) L2)))
-		  ((< (order t1) (order t2))
-		   (adjoin-term
-		     t2 (add-terms L1 (rest-terms L2))))
-		  (else
-		    (adjoin-term
-		      (make-term (order t1)
-				 (add (coeff t1) (coeff t2)))
-		      (add-terms (rest-terms L1)
-				 (rest-terms L2)))))))))
+        ((empty-termlist? L2) L1)
+        (else
+          (let ((t1 (first-term L1)) (t2 (first-term L2)))
+            (cond ((> (order t1) (order t2))
+                   (adjoin-term
+                     t1 (add-terms (rest-terms L1) L2)))
+                  ((< (order t1) (order t2))
+                   (adjoin-term
+                     t2 (add-terms L1 (rest-terms L2))))
+                  (else
+                    (adjoin-term
+                      (make-term (order t1)
+                                 (add (coeff t1) (coeff t2)))
+                      (add-terms (rest-terms L1)
+                                 (rest-terms L2)))))))))
 (define (mul-terms L1 L2)
   (if (empty-termlist? L1)
     (the-empty-termlist)
     (add-terms (mul-term-by-all-terms (first-term L1) L2)
-	       (mul-terms (rest-terms L1) L2))))
+               (mul-terms (rest-terms L1) L2))))
 (define (mul-term-by-all-terms t1 L)
   (if (empty-termlist? L)
     (the-empty-termlist)
     (let ((t2 (first-term L)))
       (adjoin-term
-	(make-term (+ (order t1) (order t2))
-		   (mul (coeff t1) (coeff t2)))
-	(mul-term-by-all-terms t1 (rest-terms L))))))
+        (make-term (+ (order t1) (order t2))
+                   (mul (coeff t1) (coeff t2)))
+        (mul-term-by-all-terms t1 (rest-terms L))))))
 
 (define (make-polynomial var terms)
   ((get 'make 'polynomial) var terms))
@@ -1682,21 +1682,21 @@ encoded-rock-song
 (define install-zero-poly-package
   (put '=zero? 'polynomial
        (lambda (poly) (= 0
-			 (fold-left + 0 (map coeff (term-list poly)))))
+                         (fold-left + 0 (map coeff (term-list poly)))))
        'done))
 
 ;-- 2.88
 (define install-sub-package
   (define (negation termlist)
     (map (lambda (term) (make-term (order term) (- (coeff term))))
-	 termlist))
+         termlist))
   (define (sub-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
       (make-poly (variable p1)
-		 (add-terms (term-list p1)
-			    (negation (term-list p2))))
+                 (add-terms (term-list p1)
+                            (negation (term-list p2))))
       (error "Polys not in same var -- SUB-POLY"
-	     (list p1 p2))))
+             (list p1 p2))))
   (put 'sub '(polynomial polynomial)
        (lambda (p1 p2) (tag (sub-poly p1 p2))))
   'done)
@@ -1708,8 +1708,8 @@ encoded-rock-song
     (if (=zero? (coeff term))
       term-list
       (if (= (order term) (length term-list)) ; i.e. lower orders are occupied
-	(cons (coeff term) term-list)
-	(adjoin-term term (cons 0 term-list))))) ; We will pad with 0 as needed
+        (cons (coeff term) term-list)
+        (adjoin-term term (cons 0 term-list))))) ; We will pad with 0 as needed
   (define (the-empty-termlist) '())
   (define (first-term term-list)
     (if (null? (cdr term-list))
@@ -1731,11 +1731,11 @@ encoded-rock-song
   ; to sum these lists using a fold
   (let ((ml (max (length L1) (length L2))))
     (map (lambda (l) (apply + l))
-	 (zip (pad L1 ml 0) (pad L2 ml 0)))))
+         (zip (pad L1 ml 0) (pad L2 ml 0)))))
 (define (mul-terms L1 L2)
   (let ((ml (max (length L1) (length L2))))
     (map (lambda (l) (apply * l))
-	 (zip (pad L1 ml 1) (pad L2 ml 1)))))
+         (zip (pad L1 ml 1) (pad L2 ml 1)))))
 
 ;-- 2.90
 ; This is a major effort, not a local change. <= okay, maybe later then.
@@ -1745,14 +1745,14 @@ encoded-rock-song
   (if (empty-termlist? L1)
     (list (the-empty-termlist) (the-empty-termlist))
     (let ((t1 (first-term L1))
-	  (t2 (first-term L2)))
+          (t2 (first-term L2)))
       (if (> (order t2) (order t1))
-	(list (the-empty-termlist) L1)
-	(let ((new-c (div (coeff t1) (coeff t2)))
-	      (new-o (- (order t1) (order t2))))
-	  (let ((rest-of-result (div-terms (rest-terms L1) (rest-terms L2)) ))
-	    (add-terms (make-term new-c new-o) rest-of-result)
-	    ))))))
+        (list (the-empty-termlist) L1)
+        (let ((new-c (div (coeff t1) (coeff t2)))
+              (new-o (- (order t1) (order t2))))
+          (let ((rest-of-result (div-terms (rest-terms L1) (rest-terms L2)) ))
+            (add-terms (make-term new-c new-o) rest-of-result)
+            ))))))
 ; NB: untested.
 
 ;-- 2.92

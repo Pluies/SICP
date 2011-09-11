@@ -10,16 +10,16 @@
 (define (sumSqu x y) (+ (* x x) (* y y)))
 (define (sumTwoBiggers a b c)
   (cond ((> a b) (cond ((> b c) (sumSqu a b))
-		       (else (sumSqu a c))))
-	(else (cond ((> a c) (sumSqu b a))
-		    (else (sumSqu b c))))))
+                       (else (sumSqu a c))))
+        (else (cond ((> a c) (sumSqu b a))
+                    (else (sumSqu b c))))))
 
 
 ;-- 1.9 fibo
 (define (fibo n)
   (cond ((= n 0) 0)
-	((= n 1) 1)
-	(else (+ (fibo (- n 1)) (fibo (- n 2))))))
+        ((= n 1) 1)
+        (else (+ (fibo (- n 1)) (fibo (- n 2))))))
 
 (define (fib n)
   (fib-iter 0 1 n))
@@ -47,15 +47,15 @@
 ;-- 1.12
 (define (pascal line col)
   (cond ((= col 0) 1)
-	((< line 1) 0)
-	(else (+ (pascal (- line 1) col)
-		 (pascal (- line 1) (- col 1))))))
+        ((< line 1) 0)
+        (else (+ (pascal (- line 1) col)
+                 (pascal (- line 1) (- col 1))))))
 
 ;-- 1.17
 (define (fast-mult a b)
   (cond ((= b 1) a)
-	((even? b) (fast-mult (double a) (halve b)))
-	(else (+ a (fast-mult a (- b 1))))))
+        ((even? b) (fast-mult (double a) (halve b)))
+        (else (+ a (fast-mult a (- b 1))))))
 
 ;-- 1.30
 (define (sum term a next b)
@@ -104,15 +104,15 @@
   (if (> a b)
     null-value
     (combiner (if (filter a)
-		(term a)
-		null-value)
-	      (filtered-accumulate combiner
-						  null-value
-						  filter
-						  term
-						  (next a)
-						  next
-						  b))))
+                (term a)
+                null-value)
+              (filtered-accumulate combiner
+                                   null-value
+                                   filter
+                                   term
+                                   (next a)
+                                   next
+                                   b))))
 
 ; a.
 (define (square x) (* x x))
@@ -138,7 +138,7 @@
 ;		   i.e. x = 1 + 1/x
 (define phi
   (fixed-point (lambda (x) (average x (+ 1 (/ 1 x))))
-	       1.0))
+               1.0))
 
 ; Helpers:
 (define (average x y) (/ (+ x y) 2))
@@ -149,8 +149,8 @@
   (define (try guess)
     (let ((next (f guess)))
       (if (close-enough? guess next)
-	next
-	(try next))))
+        next
+        (try next))))
   (try first-guess))
 
 ;-- 1.36
@@ -163,16 +163,16 @@
       (display guess)
       (newline)
       (if (close-enough? guess next)
-	next
-	(try next))))
+        next
+        (try next))))
   (try first-guess))
 
 (define xxth
   (fixed-point (lambda (x) (/ (log 1000) (log x)))
-	       2.0))
+               2.0))
 (define xxth_av
   (fixed-point (lambda (x) (average x (/ (log 1000) (log x))))
-	       2.0))
+               2.0))
 
 ; The average version uses far less iterations.
 
@@ -190,34 +190,34 @@
     (if (= term 0)
       result
       (loop (/ (n term) (+ (d term) result))
-	    (- term 1))))
+            (- term 1))))
   (loop 0 k))
 
 ;-- 1.38
 (define (n x)
   (cond ((= x 1) 1)
-	((= x 2) 2)
-	(else (if (= 2 (remainder x 3))
-		(* 2 (+ 1 (/ (- x 2) 3)))
-		1))))
+        ((= x 2) 2)
+        (else (if (= 2 (remainder x 3))
+                (* 2 (+ 1 (/ (- x 2) 3)))
+                1))))
 
 (define e
   (+ 2.0 (cont-frac (lambda (x) 1)
-		    (lambda (x) (cond ((= x 0) 1)
-				      ((= x 1) 1)
-				      ((= x 2) 2)
-				      (else (if (= 0 (remainder (- x 2) 3))
-					      (* 2 (+ 1 (/ (- x 2) 3)))
-					      1))))
-		    50)))
+                    (lambda (x) (cond ((= x 0) 1)
+                                      ((= x 1) 1)
+                                      ((= x 2) 2)
+                                      (else (if (= 0 (remainder (- x 2) 3))
+                                              (* 2 (+ 1 (/ (- x 2) 3)))
+                                              1))))
+                    50)))
 
 ;-- 1.39
 (define (tan-cf x k)
   (cont-frac  (lambda (z) (if (= 1 z)
-			    x
-			    (- (* x x))))
-	      (lambda (z) (- (* 2 z) 1))
-	      k))
+                            x
+                            (- (* x x))))
+              (lambda (z) (- (* 2 z) 1))
+              k))
 
 ;-- 1.40
 
@@ -249,9 +249,9 @@
 (define (smooth f)
   (define dx 0.001)
   (lambda (x) (/ (+ (f (- x dx))
-		    (f x)
-		    (f (+ x dx)))
-		 3)))
+                    (f x)
+                    (f (+ x dx)))
+                 3)))
 
 (define (nfoldsmooth f n)
   ((repeated smooth n) f))
@@ -263,20 +263,20 @@
 
 (define (iterative-improve good-enough? improve)
   (lambda (guess) (if (good-enough? guess)
-		    guess
-		    ((iterative-improve good-enough? improve)(improve guess)))))
+                    guess
+                    ((iterative-improve good-enough? improve)(improve guess)))))
 
 (define (sqrt-ii n)
   ((iterative-improve (lambda (guess)
-			(< (abs (- (square guess) n)) 0.001))
-		      (lambda (guess)
-			(average guess (/ n guess))))
+                        (< (abs (- (square guess) n)) 0.001))
+                      (lambda (guess)
+                        (average guess (/ n guess))))
    1.0))
 
 (define (fixed-point-ii f)
   ((iterative-improve (lambda (guess)
-			(< (abs (- guess (f guess))) 0.00001))
-		      (lambda (guess)
-			(f guess)))
+                        (< (abs (- guess (f guess))) 0.00001))
+                      (lambda (guess)
+                        (f guess)))
    1.0))
 
