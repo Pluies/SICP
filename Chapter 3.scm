@@ -2014,6 +2014,51 @@ w
   (let ((data (smooth sense-data)))
     (stream-map sign-change-detector data (stream-cdr data))))
 
-;-- 3.77
+;-- 3.77 to 3.80
+; Too much maths again.
 
+;-- 3.81
+(define (random-numbers request-stream initial-value)
+  (cond
+    ((= (stream-car request-stream) 'generate)
+     (cons-stream (rand-update initial-value)
+                  (random-numbers (cdr-stream request-stream)
+                                  (rand-update initial-value))))
+    ((= (stream-car request-stream) 'reset)
+     (cons-stream initial-value
+                  (random-numbers (cdr-stream request-stream)
+                                  initial-value)))))
+
+;-- 3.82
+; Given:
+(define (map-successive-pairs f s)
+  (cons-stream
+    (f (stream-car s) (stream-car (stream-cdr s)))
+    (map-successive-pairs f (stream-cdr (stream-cdr s)))))
+(define (monte-carlo experiment-stream passed failed)
+  (define (next passed failed)
+    (cons-stream
+      (/ passed (+ passed failed))
+      (monte-carlo
+        (stream-cdr experiment-stream) passed failed)))
+  (if (stream-car experiment-stream)
+    (next (+ passed 1) failed)
+    (next passed (+ failed 1))))
+(define (random-in-range low high)
+  (let ((range (- high low)))
+    (+ low (random range))))
+
+; Solution:
+(define (random-stream-in-range a b)
+  (cons-stream (random-in-range a b)
+               (random-stream-in-range a b)))
+(define (P x y)
+  (< (+ (expt (- x 5) 2)
+        (expt (- y 7) 2))
+     (expt 3 2)))
+(define (estimate-integral P x1 x2 y1 y2)
+  (define random-xy-stream
+    (interleave (random-stream-in-range x1 x2)
+                (random-stream-in-range y1 y2)))
+  (monte-carlo (map-successive-pairs P random-xy-stream) 0 0))
 
