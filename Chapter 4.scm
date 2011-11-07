@@ -431,6 +431,295 @@
 (eval '(or false false false) the-global-environment)
 
 ;-- 4.5
+; We must support the syntax:
+; (cond ((assoc 'b '((a 1) (b 2))) => cadr)
+;       (else false))
+
+; We add the helper functions:
+(define (cond-arrow-form? clause)
+  (eq? (car (cond-actions clause)) '=>))
+(define (cond-arrow-action clause)
+  (caddr clause))
+; And modify expand-clauses as follows:
+(define (expand-clauses clauses)
+  (if (null? clauses)
+    'false
+    (let ((first (car clauses))
+          (rest (cdr clauses)))
+      ; We replace the simple if by a ternary cond: our clause can be either an
+      ; else, an arrow, or a standard clause
+      (cond ((cond-else-clause? first)
+             (if (null? rest)
+               (sequence->exp (cond-actions first))
+               (error "ELSE clause isn't last -- COND->IF"
+                      clauses)))
+            ((cond-arrow-form? first)
+             (make-if (cond-predicate first)
+                      (list (cond-arrow-action first)
+                            (cond-predicate first))
+                      (expand-clauses rest)))
+            (else
+              (make-if (cond-predicate first)
+                       (sequence->exp (cond-actions first))
+                       (expand-clauses rest)))))))
+
+; Tests:
+(eval '(cond ((+ 1 1) => quote)
+             (false => quote)
+             (else 1))
+      the-global-environment)
+; (+ 1 1)
+(eval '(cond (false => quote)
+             ((+ 2 2) => quote)
+             (else 1))
+      the-global-environment)
+; (+ 2 2)
+
+;-- 4.6
+; Support for let
+(define (let? exp)
+  (tagged-list? exp 'let))
+(define let-body cddr)
+(define let-associations cadr)
+(define (let-symbols exp)
+  (map car (let-associations exp)))
+(define (let-values exp)
+  (map cadr (let-associations exp)))
+(define (let->combination exp)
+  (cons (make-lambda (let-symbols exp)
+                     (let-body exp))
+        (let-values exp)))
+; Tests:
+(let->combination '(let ((a (+ 1 5))) (+ a 1)))
+; ((lambda (a) (+ a 1)) (+ 1 5))
+
+; Now we redefine eval:
+(define (eval exp env)
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((quoted? exp) (text-of-quotation exp))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((if? exp) (eval-if exp env))
+        ((let? exp) (eval (let->combination exp) env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp) 
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp) (eval (cond->if exp) env))
+        ((application? exp)
+         (apply (eval (operator exp) env)
+                (list-of-values (operands exp) env)))
+        (else
+          (error "Unknown expression type -- EVAL" exp))))
+
+(eval '(let ((a (+ 1 5))) (+ a 1)) the-global-environment)
+; 7
+
+;-- 4.7
+; let*
+(define (make-let assocs body)
+  (list 'let assocs body))
+(define (let*? exp)
+  (tagged-list? exp 'let*))
+(define (make-recursive-let assocs body)
+  (if (null? assocs)
+    (car body)
+    (make-let (list (car assocs))
+              (make-recursive-let (cdr assocs) body))))
+(define (let*->nested-lets exp)
+  (make-recursive-let (let-associations exp) (let-body exp)))
+
+; Test:
+(let*->nested-lets '(let* ((a 1) (b (+ a 1))) b))
+; (let ((a 1)) (let ((b (+ a 1))) b))
+
+; Now we redefine eval:
+(define (eval exp env)
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((quoted? exp) (text-of-quotation exp))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((if? exp) (eval-if exp env))
+        ((let*? exp) (eval (let*->nested-lets exp) env))
+        ((let? exp) (eval (let->combination exp) env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp) 
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp) (eval (cond->if exp) env))
+        ((application? exp)
+         (apply (eval (operator exp) env)
+                (list-of-values (operands exp) env)))
+        (else
+          (error "Unknown expression type -- EVAL" exp))))
+
+; Test:
+(eval '(let* ((a 1) (b (+ a 1))) b) the-global-environment)
+; 2
+
+; As we show, it is indeed possible to evaluate let* in terms of derived
+; expressions (actually, derived derived expressions, because a let* is
+; derived in several let which are in turn derived in lambdas).
+; This is due to the recursive nature of eval.
+
+;-- 4.8
+; Named let
+
+; From 4.6:
+(define (let? exp)
+  (tagged-list? exp 'let))
+(define let-body cddr)
+(define let-associations cadr)
+(define (let-symbols exp)
+  (map car (let-associations exp)))
+(define (let-values exp)
+  (map cadr (let-associations exp)))
+; Added:
+(define (named-let? exp)
+  (not (list? (let-associations exp))))
+(define named-let-fun cadr)
+(define named-let-associations caddr)
+(define named-let-body cdddr)
+(define (named-let-symbols exp)
+  (map car (named-let-associations exp)))
+(define (named-let-values exp)
+  (map cadr (named-let-associations exp)))
+(define (define-let-fun exp)
+  (list 'define
+        (cons (named-let-fun exp)
+              (named-let-symbols exp))
+        (car (named-let-body exp))))
+; Modified:
+(define (let->combination exp)
+  (cond ((named-let? exp)
+         (cons (make-lambda (named-let-symbols exp)
+                            (cons (define-let-fun exp)
+                                  (list (cons (named-let-fun exp)
+                                              (named-let-symbols exp)))))
+               (named-let-values exp)))
+        (else
+          (cons (make-lambda (let-symbols exp)
+                             (let-body exp))
+                (let-values exp)))))
+
+; Test:
+(define named-let-test '(let fib-iter ((a 1)
+                                       (b 0)
+                                       (count n))
+                          (if (= count 0)
+                            b
+                            (fib-iter (+ a b) a (- count 1)))))
+(let->combination named-let-test)
+; ((lambda (a b count) (define (fib-iter a b count) (if (= count 0) b (fib-iter (+ a b) a (- count 1)))) (fib-iter a b count)) 1 0 n)
+
+; Let's reindent that to see if it's correct:
+((lambda (a b count)
+   (define (fib-iter a b count)
+     (if (= count 0)
+       b
+       (fib-iter (+ a b) a (- count 1))))
+   (fib-iter a b count))
+ 1 0 n)
+
+(eval '(define (fib n)
+         (let fib-iter ((a 1)
+                        (b 0)
+                        (count n))
+           (if (= count 0)
+             b
+             (fib-iter (+ a b) a (- count 1)))))
+      the-global-environment)
+; ok
+(eval '(fib 5) the-global-environment)
+;Unbound variable =
+
+; Darn. Can't test this, = is not part of our environment.
+; That said, we can try the combinator by executing the generated code in
+; another Scheme:
+(define n 20)
+((lambda (a b count)
+   (define (fib-iter a b count)
+     (if (= count 0)
+       b
+       (fib-iter (+ a b) a (- count 1))))
+   (fib-iter a b count))
+ 1 0 n)
+; 6765
+; Correct!
+
+;-- 4.9
+; Let's create for.
+; It should be called this way:
+(for ((define i 0) (< i 5) (set! i (+ i 1)))
+     (display i))
+; And "compile" down to a recursive function.
+
+(define (for? exp)
+  (tagged-list? exp 'for))
+(define for-params cadr)
+(define (for-init exp)
+  (car (for-params exp)))
+(define (for-cond exp)
+  (cadr (for-params exp)))
+(define (for-iter exp)
+  (caddr (for-params exp)))
+(define for-body caddr)
+(define (for-recursion exp)
+  (list 'define ; NB: we could write a make-definition
+        (list 'recurse)
+        (list 'if ; ... and adapt make-if to support alternative-less ifs
+              (for-cond exp)
+              (make-begin (list (for-body exp)
+                                (for-iter exp)
+                                (list 'recurse))))))
+(define (for->combination exp)
+  (list (make-lambda '()
+                     (list (for-init exp)
+                           (for-recursion exp)
+                           (list 'recurse)))))
+
+; Test:
+(define for-test '(for ((define i 0) (< i 5) (set! i (+ i 1))) (display i)))
+(for->combination for-test)
+; Gives:
+((lambda ()
+   (define i 0)
+   (define (recurse)
+     (if (< i 5)
+       (begin (display i)
+              (set! i (+ i 1))
+              (recurse))))
+   (recurse)))
+; Given set! and display aren't defined in our implementation, we can execute
+; the generated code in another Scheme to see that it works:
+; 01234
+
+;-- 4.10
+; Let's say we change the syntax of if to strange-if, defined as:
+; (strange-if consequent predicate alternative)
+; We only have to change:
+(define (if? exp) (tagged-list? exp 'strange-if))
+(define (if-predicate exp) (caddr exp))
+(define (if-consequent exp) (cadr exp))
+(define (if-alternative exp)
+  (if (not (null? (cdddr exp)))
+    (cadddr exp)
+    'false))
+(define (make-if predicate consequent alternative)
+  (list 'strange-if consequent predicate alternative))
+
+; Test:
+(eval '(strange-if true (+ 1 1) false) the-global-environment)
+; #t
+
+;-- 4.11
+
 
 
 
