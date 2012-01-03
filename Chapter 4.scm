@@ -719,7 +719,128 @@
 ; #t
 
 ;-- 4.11
+; Instead of representing a frame as a pair of lists, we can represent a frame
+; as a list of bindings, where each binding is a name-value pair. 
+(define (make-frame variables values)
+  (zip variables values))
+(define (frame-variables frame) (map car frame))
+(define (frame-values frame) (map cadr frame))
+(define (add-binding-to-frame! var val frame)
+  (set-cdr! frame (cons (car frame) (cdr frame)))
+  (set-car! frame (list var val)))
 
+; Let's try:
+(eval '(+ 2 3) the-global-environment)
+; Value: 5
+; Good!
+(eval '(define a 10) the-global-environment)
+; Value: ok
+; Good!
+(eval 'a the-global-environment)
+; 10
+; Perfect!
 
+;-- 4.12
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (if (eq? env the-empty-environment)
+      (error "Unbound variable" var)
+      (let ((frame (first-frame env)))
+        (scan (frame-variables frame)
+              (frame-values frame)
+              var
+              val
+              (lambda ()
+                (env-loop (enclosing-environment env)))))))
+  (env-loop env))
+(define (set-variable-value! var val env)
+  (define (env-loop env)
+    (if (eq? env the-empty-environment)
+      (error "Unbound variable -- SET!" var)
+      (let ((frame (first-frame env)))
+        (scan (frame-variables frame)
+              (frame-values frame)
+              var
+              val
+              (lambda ()
+                (env-loop (enclosing-environment env)))))))
+  (env-loop env))
+(define (define-variable! var val env)
+  (let ((frame (first-frame env)))
+    (scan (frame-variables frame)
+          (frame-values frame)
+          var
+          val
+          (lambda ()
+            (add-binding-to-frame! var val frame)))))
+; These three methods all perform a search of the environment.
+(define (scan vars vals var val callback)
+  (cond ((null? vars)
+         (callback))
+        ((eq? var (car vars))
+         (set-car! vals val))
+        (else (scan (cdr vars) (cdr vals)))))
 
+; Test:
+(eval '(define b 10) the-global-environment)
+
+;-- 4.13
+; Design an un-binding mechanism
+; Helper functions:
+(define (undefinition? exp)
+  (tagged-list? exp 'make-unbound!))
+(define (undefinition-variable exp) (cadr exp))
+(define (eval-undefinition exp env)
+  (undefine-variable! (undefinition-variable exp)
+                      env)
+  'ok)
+; Reminder: our variable list for each is composed of two lists: one containing
+; the variable names, the other containing the actual values.
+; We'll only look for the variable in the first frame.
+(define (undefine-variable! var env)
+  (let ((frame (first-frame env)))
+    (define (scan vars vals)
+      (cond ((null? vars)
+             (error "Variable does not exist -- MAKE-UNBOUND!" var))
+            ((eq? var (car vars)) ; Remove binding:
+             (set-car! vars (cdr vars)))
+            (else (scan (cdr vars) (cdr vals)))))
+    (scan (frame-variables frame)
+          (frame-values frame))))
+; Then we redefine eval:
+(define (eval exp env)
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((quoted? exp) (text-of-quotation exp))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((undefinition? exp) (eval-undefinition exp env))
+        ((if? exp) (eval-if exp env))
+        ((let? exp) (eval (let->combination exp) env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((begin? exp) 
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp) (eval (cond->if exp) env))
+        ((application? exp)
+         (apply (eval (operator exp) env)
+                (list-of-values (operands exp) env)))
+        (else
+          (error "Unknown expression type -- EVAL" exp))))
+
+; Test:
+(eval 'a the-global-environment)
+; Unbound variable a
+(eval '(define a 12) the-global-environment)
+;Value: ok
+(eval 'a the-global-environment)
+;Value: 12
+(eval '(make-unbound! a) the-global-environment)
+;Value: ok
+(eval 'a the-global-environment)
+; Unbound variable a
+
+;-- 4.14
 
