@@ -746,10 +746,10 @@
     (if (eq? env the-empty-environment)
       (error "Unbound variable" var)
       (let ((frame (first-frame env)))
-        (scan (frame-variables frame)
-              (frame-values frame)
+        (scan frame
               var
-              val
+              '()
+              #f
               (lambda ()
                 (env-loop (enclosing-environment env)))))))
   (env-loop env))
@@ -758,28 +758,32 @@
     (if (eq? env the-empty-environment)
       (error "Unbound variable -- SET!" var)
       (let ((frame (first-frame env)))
-        (scan (frame-variables frame)
-              (frame-values frame)
+        (scan frame
               var
               val
+              #t
               (lambda ()
                 (env-loop (enclosing-environment env)))))))
   (env-loop env))
 (define (define-variable! var val env)
   (let ((frame (first-frame env)))
-    (scan (frame-variables frame)
-          (frame-values frame)
+    (scan frame
           var
           val
+          #t
           (lambda ()
             (add-binding-to-frame! var val frame)))))
 ; These three methods all perform a search of the environment.
-(define (scan vars vals var val callback)
-  (cond ((null? vars)
-         (callback))
-        ((eq? var (car vars))
-         (set-car! vals val))
-        (else (scan (cdr vars) (cdr vals)))))
+(define (scan frame var val set callback)
+  (define (scan-iter vars vals)
+    (cond ((null? vars)
+           (callback))
+          ((eq? var (car vars))
+           (if set
+             (set-car! vals val)
+             (car vals)))
+          (else (scan-iter (cdr vars) (cdr vals)))))
+  (scan-iter (frame-variables frame) (frame-values frame)))
 
 ; Test:
 (eval '(define b 10) the-global-environment)
@@ -843,4 +847,8 @@
 ; Unbound variable a
 
 ;-- 4.14
+; Eva's version works as intended because it is interpreted inside the Scheme
+; interpreter we wrote. However, Louis' version calls the underlying Scheme's
+; "apply", instead of our interpreted "apply"... Hence things going awry.
+
 
