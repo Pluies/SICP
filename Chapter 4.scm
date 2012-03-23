@@ -787,6 +787,9 @@
 
 ; Test:
 (eval '(define b 10) the-global-environment)
+; ok
+(eval 'b the-global-environment)
+; 10
 
 ;-- 4.13
 ; Design an un-binding mechanism
@@ -851,4 +854,164 @@
 ; interpreter we wrote. However, Louis' version calls the underlying Scheme's
 ; "apply", instead of our interpreted "apply"... Hence things going awry.
 
+;-- 4.15
+; Given a one-argument procedure p and an object a, p is said to ``halt'' on a
+; if evaluating the expression (p a) returns a value (as opposed to terminating
+; with an error message or running forever). Show that it is impossible to
+; write a procedure halts? that correctly determines whether p halts on a for
+; any procedure p and object a. Use the following reasoning: If you had such a
+; procedure halts?, you could implement the following program: 
+(define (run-forever) (run-forever))
+(define (try p)
+  (if (halts? p p)
+      (run-forever)
+      'halted))
+; Now consider evaluating the expression (try try) and show that any possible
+; outcome (either halting or running forever) violates the intended behavior of
+; halts?
 
+; The two possible outcomes when we run (try try) are:
+; - (try try) runs forever: it means that the condition inside try has been
+; found correct, i.e. that (halts? try try) is true. But we hypothesised it
+; runs forever. Contradiction.
+; - (try try) returns 'halted: it means that the condition inside try has been
+; found false, i.e. that (halts? try try) is false. But we hypothesised it does
+; halt. Contradition.
+
+;-- 4.16
+; (Uses let from 4.6 and functions defined in 4.12)
+; a.
+(define (lookup-variable-value var env)
+  (define (env-loop env)
+    (if (eq? env the-empty-environment)
+      (error "Unbound variable" var)
+      (let ((frame (first-frame env)))
+        (scan frame
+              var
+              '()
+              #f
+              (lambda ()
+                (env-loop (enclosing-environment env)))))))
+  (let ((value (env-loop env)))
+    (if (eq? value '*unassigned*)
+      (error "Unassigned value for variable:" var)
+      value)))
+; Test:
+(eval '(define a '*unassigned*) the-global-environment)
+; ok
+(eval 'a the-global-environment)
+; *** ERROR IN (console)@568.1 -- Unassigned value for variable: a
+
+; b.
+; Helper functions, if they're not defined in your Scheme:
+(define (filter predicate list)
+  (cond ((null? list) '())
+        ((predicate (car list))
+         (cons (car list) (filter predicate (cdr list))))
+        (else
+          (filter predicate (cdr list)))))
+(define (last list)
+  (cond ((null? list) '())
+        ((null? (cdr list)) (car list))
+        (else (last (cdr list)))))
+(define (zip a b)
+  (if (null? a)
+    '()
+    (cons (list (car a) (car b)) (zip (cdr a) (cdr b)))))
+(define (scan-out-defines body)
+  (let* ((definitions (filter definition? body))
+         (rest-of-lambda (cdr (memq (last definitions) body)))
+         (symbols (map cadr definitions))
+         (bodies (map caddr definitions)))
+    (append (list 'let
+                  (map (lambda (s) (cons s (cons '*unassigned* '())))
+                       symbols))
+            (map (lambda (s) (list 'set! (cadr s) (caddr s)))
+                 definitions)
+            rest-of-lambda)))
+; Test:
+(define test '((define u true)
+               (define v false)
+               (its-the-lambda-rest)))
+(scan-out-defines test)
+; (let ((u *unassigned*) (v *unassigned*))
+;   (set! u true)
+;   (set! v false)
+;   (its-the-lambda-rest))
+
+; All good.
+
+; c.
+(define (procedure-body p)
+  (scan-out-defines (caddr p)))
+; Test:
+(define test '(lambda (a b c)
+  (define u 1)
+  (define v 3)
+  (+ u v)))
+(eval test the-global-environment)
+; Does a procedure as expected.
+(define test2 '(define (ll a b c)
+  (define d 1)
+  (+ a b c d)))
+(eval test2 the-global-environment)
+(eval '(ll 1 2 3) the-global-environment)
+
+; Alright, so. This code is wrong. It blows up somewhere between evaluating and
+; executing, as far as I can tell. I spent too much time staring blankly at the
+; code already; to fix someday.
+
+;-- 4.17
+; (Imagine drawings)
+
+;-- 4.18
+; This will work in 4.16's way, but not in the alternative strategy.
+
+;-- 4.19
+; I support Ben's point of view. f is a closure over the bound variable a, which
+; gets overwritten in the function scope when redefined. 4.16's behaviour is
+; indeed as described by Alyssa, but should stay an implementation detail.
+; This is very much of a procedural-oriented way of thinking, because it doesn't
+; satisfy the condition of simultaneity that should be part of a suite of 
+; definitions.
+; Eva's way is the best, but is hard to implement: it would require definitions
+; to be processed in a certain order, and/or to be scanned out for
+; yet-unprocessed definitions and put on hold until those have been evaluated.
+
+;-- 4.20
+;
+
+;-- 4.21
+; Haaa! That's the Y Combinator! *brain 'splodes*
+; Putting this part of Chapter 4 on hold until my brain gets bigger.
+
+
+
+;-- 4.25
+(define (unless condition usual-value exceptional-value)
+  (if condition exceptional-value usual-value))
+(define (factorial n)
+  (unless (= n 1)
+          (* n (factorial (- n 1)))
+          1))
+(factorial 5)
+; This never stops. Why?
+; After all, it we transpose unless as if, it gives:
+(define (if-factorial n)
+  (if (= n 1)
+    1
+    (* n (if-factorial (- n 1)))))
+; And that works. So where's the catch?
+
+; The catch is in applicative-order.
+; When we want to apply factorial, we apply unless and eval its arguments. But
+; one of these arguments is factorial, which contains an unless, which is
+; converted to an if. But this if also has factorial which has an unless which
+; needs to be converted to an if - and so on.
+
+; With lazy evaluation, factorial would be evaluated once when n is 5. Then
+; evaluated a second time when n is 4, and so on until n is 1 and we don't need
+; to eval factorial any more.
+
+;-- 4.26
+; Ben's solution is easy. I don't think I understand Alyssa's solution.
