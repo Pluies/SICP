@@ -1007,7 +1007,7 @@
 ; When we want to apply factorial, we apply unless and eval its arguments. But
 ; one of these arguments is factorial, which contains an unless, which is
 ; converted to an if. But this if also has factorial which has an unless which
-; needs to be converted to an if - and so on.
+; needs to be converted to an if - and so on ad infinitum.
 
 ; With lazy evaluation, factorial would be evaluated once when n is 5. Then
 ; evaluated a second time when n is 4, and so on until n is 1 and we don't need
@@ -1015,3 +1015,91 @@
 
 ;-- 4.26
 ; Ben's solution is easy. I don't think I understand Alyssa's solution.
+
+;-- 4.27
+(define count 0)
+(define (id x)
+  (set! count (+ count 1))
+  x)
+(define w (id (id 10)))
+;;; L-Eval input:
+count
+;;; L-Eval value:
+0
+; Nothing has been evaluated yet. w received a mere thunk, but has not been 
+; executed because of laziness.
+;;; L-Eval input:
+w
+;;; L-Eval value:
+10
+; id returns its input value, in this case the value of the (now executed)
+; (id 10) thunk.
+;;; L-Eval input:
+count
+;;; L-Eval value:
+2
+; The two (id) and their side-effects have been forced to execute due to
+; evaluating w
+
+;-- 4.28
+(define (alittlebitsofternow) -)
+(define (alittlebitfasternow) +)
+(define shout #t)
+(define (speed)
+  (if shout
+    (alittlebitsofternow)
+    (alittlebitfasternow)))
+(define (songpart)
+  ((speed) 1 1))
+
+; We have to evaluate the operator (speed) here. If we didn't, we wouldn't know
+; how to apply those arguments to a thunk.
+
+;-- 4.29
+; Canonical example is the naive fibonacci:
+(define (fibonacci n)
+  (if (or (= n 0)
+          (= n 1))
+    1
+    (+ (fibonacci (- n 1))
+       (fibonacci (- n 2)))))
+
+; As is, this function does an exponential number of function calls — which is
+; bad. Memoizing allows us to cut that number dramatically and make the number
+; of function calls O(n)
+
+(define (square x)
+  (* x x))
+;;; L-Eval input:
+(square (id 10))
+;;; L-Eval value:
+100
+;;; L-Eval input:
+count
+;;; L-Eval value:
+; With memoization:
+1 ; because (id 10) has been called once and memoized
+; Without:
+2 ; because (id 10) has been called twice
+
+;-- 4.30
+; I don't know.
+
+;-- 4.31
+; Insert large rewrite of the interpreter.
+
+;-- 4.32
+; Making the car as lazy as the cdr allows for completely-lazy data structures,
+; such as trees. Before that, we'd have had to make sure the car was something
+; easily computable and/or small, because it'd be evaluated as soon as the
+; element is accessed - now it can be lazy.
+
+;-- 4.33
+; '(a b) is seen by the parser as (quote (a b)). This leaves out our tuned cons
+; and makes both approaches incompatible.
+; The solution is to replace the parser of quotations in a way that it'll
+; provide lazy lists that we can manipulate with the lazy car and the lazy cdr.
+
+;-- 4.34
+; You're on your own, buddy.
+
