@@ -1103,3 +1103,42 @@ count
 ;-- 4.34
 ; You're on your own, buddy.
 
+;-- 4.35
+; At first, I wanted to use:
+(define (an-integer-between low high)
+  (if (= low high)
+    high
+    (amb low (an-integer-between (+ low 1) high))))
+; But is seems more in the spirit of the chapter to write:
+(define (an-integer-between low high)
+  (require (<= low high))
+  (amb low (an-integer-between (+ low 1) high)))
+
+;-- 4.36
+; This won't work due to the way amb works. Depth-first backtracking means that
+; amb will try values of i, j, k as (1 1 1) first, then (1 1 2), then (1 1 3),
+; etc, trying to cover all the possible values of k.
+
+; Instead, we can write:
+(define (pythagorean-triples)
+  (letrec ((k (an-integer-starting-from 1))
+           (j (an-integer-between 1 k))
+           (i (an-integer-between 1 j)))
+    (require (= (+ (* i i) (* j j)) (* k k)))
+    (list i j k)))
+; Here, we're inverting the order of integers to use depth-first search to our
+; advantage. amb will start by incrementing i, then j, and k in last resort,
+; yielding all the possible triplets that can give pythagorean numbers. These
+; triplets will then be checked to be pythagorean by the 'require' clause.
+
+;-- 4.37
+; Yes, Ben's technique is more efficient: he adds i² and j², then checks if the
+; square root of this sum (an hypothetical k) is an integer. This allows him to
+; only iterate on two values instead of three, i.e. for a given i and j, he
+; doesn't have to go through several values of k to determine if this is a
+; pythagorean triple or not.
+;
+; Another optimisation is discarding every (i, j) combination where
+; i²+j² > high², a case where no solution would be acceptable.
+
+
