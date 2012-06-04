@@ -1141,4 +1141,98 @@ count
 ; Another optimisation is discarding every (i, j) combination where
 ; i²+j² > high², a case where no solution would be acceptable.
 
+;-- 4.38
+; We'll see when implementing (amb).
+
+;-- 4.39
+; The order of the conditions doesn't affect the answer, but can affect how
+; long the program takes to run. If we put the more restrictive conditions
+; first, then a lot of unnecessary checks will never be done.
+
+;-- 4.40
+; Before: 5^5 = 3125
+; After: 5! = 120
+
+; An attempt to make it faster:
+(define (multiple-dwelling)
+  (let ((baker (amb 1 2 3 4)))
+    (let ((cooper (amb 2 3 4 5)))
+      (let ((fletcher (amb 2 3 4)))
+        (let ((miller (amb 1 2 3 4 5)))
+          (require (> miller cooper))
+          (let ((smith (amb 1 2 3 4 5)))
+            (require (not (= (abs (- smith fletcher)) 1)))
+            (require (not (= (abs (- fletcher cooper)) 1)))
+            (list (list 'baker baker)
+                  (list 'cooper cooper)
+                  (list 'fletcher fletcher)
+                  (list 'miller miller)
+                  (list 'smith smith))))))))
+
+;-- 4.41
+; Following permutation function and helpers provided by the Rosetta Code wiki
+(define (insert l n e)
+  (if (= 0 n)
+    (cons e l)
+    (cons (car l) 
+          (insert (cdr l) (- n 1) e))))
+
+(define (seq start end)
+  (if (= start end)
+    (list end)
+    (cons start (seq (+ start 1) end))))
+
+(define (permute l)
+  (if (null? l)
+    '(())
+    (apply append (map (lambda (p)
+                         (map (lambda (n)
+                                (insert p n (car l)))
+                              (seq 0 (length p))))
+                       (permute (cdr l))))))
+
+; And solving code by yours truly
+(define (ok-arrangement r)
+  (letrec ((baker (car r))
+           (cooper (cadr r))
+           (fletcher (caddr r))
+           (miller (cadddr r))
+           (smith (car (cddddr r))))
+    ; Make sure a floor arrangement conforms to the rules
+    (and (not (= baker 5))
+         (and (not (= cooper 1))
+              (and (not (or (= fletcher 1) (= fletcher 5)))
+                   (and (> miller cooper)
+                        (and (not (= (abs (- smith fletcher)) 1))
+                             (and (not (= (abs (- fletcher cooper)) 1))))))))))
+
+(define (solve)
+  (define (solve-with-solutions s)
+    (if (ok-arrangement (car s))
+      (car s)
+      (solve-with-solutions (cdr s))))
+  (solve-with-solutions (permute '(1 2 3 4 5))))
+
+(solve)
+; (3 2 4 5 1)
+
+;-- 4.42
+; We will solve this problem in a similar manner to 4.38
+(define (solve)
+  (define betty (amb 1 2 3 4 5))
+  (define ethel (amb 1 2 3 4 5))
+  (define joan (amb 1 2 3 4 5))
+  (define kitty (amb 1 2 3 4 5))
+  (define mary (amb 1 2 3 4 5))
+  ; We'll use not equal as a subsitute for xor; it is logically equivalent
+  (require (not (equal? (= kitty 2) (= betty 3))))
+  (require (not (equal? (= ethel 1) (= joan 2))))
+  (require (not (equal? (= joan 3) (= ethel 5))))
+  (require (not (equal? (= kitty 2) (= mary 4))))
+  (require (not (equal? (= mary 4) (= betty 1))))
+  (list (list 'betty betty)
+        (list 'ethel ethel)
+        (list 'joan joan)
+        (list 'kitty kitty)
+        (list 'mary mary)))
 
